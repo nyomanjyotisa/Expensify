@@ -90,6 +90,8 @@ function CardSection() {
         );
     }
 
+    console.log(account, 'account93')
+
     return (
         <>
             <Section

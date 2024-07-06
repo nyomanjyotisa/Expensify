@@ -145,7 +145,7 @@ function AttachmentPickerWithMenuItems({
             },
             [CONST.IOU.TYPE.SUBMIT]: {
                 icon: getIconForAction(CONST.IOU.TYPE.REQUEST),
-                text: translate('iou.submitExpense'),
+                text: "submitExpense1",
                 onSelected: () => selectOption(() => IOU.startMoneyRequest(CONST.IOU.TYPE.SUBMIT, report?.reportID ?? '-1'), true),
             },
             [CONST.IOU.TYPE.PAY]: {

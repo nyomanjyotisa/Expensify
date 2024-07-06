@@ -117,7 +117,7 @@ function IOURequestStepConfirmation({
             return translate('iou.categorize');
         }
         if (isSubmittingFromTrackExpense) {
-            return translate('iou.submitExpense');
+            return "submitExpense6";
         }
         if (isSharingTrackExpense) {
             return translate('iou.share');
@@ -134,7 +134,7 @@ function IOURequestStepConfirmation({
         if (iouType === CONST.IOU.TYPE.INVOICE) {
             return translate('workspace.invoices.sendInvoice');
         }
-        return translate('iou.submitExpense');
+        return "submitExpense7";
     }, [iouType, report, translate, isSharingTrackExpense, isCategorizingTrackExpense, isSubmittingFromTrackExpense]);
 
     const participants = useMemo(

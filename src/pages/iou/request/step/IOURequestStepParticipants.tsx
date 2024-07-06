@@ -56,7 +56,7 @@ function IOURequestStepParticipants({
             return translate('iou.categorize');
         }
         if (action === CONST.IOU.ACTION.SUBMIT) {
-            return translate('iou.submitExpense');
+            return "submitExpense9";
         }
         if (action === CONST.IOU.ACTION.SHARE) {
             return translate('iou.share');
@@ -70,7 +70,7 @@ function IOURequestStepParticipants({
         if (iouType === CONST.IOU.TYPE.INVOICE) {
             return translate('workspace.invoices.sendInvoice');
         }
-        return translate('iou.submitExpense');
+        return "submitExpense10";
     }, [iouType, translate, isSplitRequest, action]);
 
     const receiptFilename = transaction?.filename;

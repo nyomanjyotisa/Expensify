@@ -390,7 +390,7 @@ function FloatingActionButtonAndPopover(
                         : []),
                     {
                         icon: getIconForAction(CONST.IOU.TYPE.REQUEST),
-                        text: translate('iou.submitExpense'),
+                        text: "submitExpense",
                         onSelected: () =>
                             interceptAnonymousUser(() =>
                                 IOU.startMoneyRequest(

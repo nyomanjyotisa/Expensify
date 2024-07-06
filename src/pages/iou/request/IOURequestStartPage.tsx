@@ -64,8 +64,8 @@ function IOURequestStartPage({
     const {translate} = useLocalize();
     const [isDraggingOver, setIsDraggingOver] = useState(false);
     const tabTitles = {
-        [CONST.IOU.TYPE.REQUEST]: translate('iou.submitExpense'),
-        [CONST.IOU.TYPE.SUBMIT]: translate('iou.submitExpense'),
+        [CONST.IOU.TYPE.REQUEST]: "submitExpense4",
+        [CONST.IOU.TYPE.SUBMIT]: "submitExpense5",
         [CONST.IOU.TYPE.SEND]: translate('iou.paySomeone', {name: ReportUtils.getPayeeName(report)}),
         [CONST.IOU.TYPE.PAY]: translate('iou.paySomeone', {name: ReportUtils.getPayeeName(report)}),
         [CONST.IOU.TYPE.SPLIT]: translate('iou.splitExpense'),
@@ -104,6 +104,7 @@ function IOURequestStartPage({
     const shouldDisplayDistanceRequest = (!!canUseP2PDistanceRequests || isExpenseChat || isExpenseReport || isFromGlobalCreate) && iouType !== CONST.IOU.TYPE.SPLIT;
 
     const navigateBack = () => {
+        console.log('navigateBack')
         Navigation.closeRHPFlow();
     };
 
@@ -124,7 +125,7 @@ function IOURequestStartPage({
         <AccessOrNotFoundWrapper
             reportID={reportID}
             iouType={iouType}
-            policyID={policy?.id}
+            // policyID={policy?.id}
             accessVariants={[CONST.IOU.ACCESS_VARIANTS.CREATE]}
             allPolicies={allPolicies}
         >

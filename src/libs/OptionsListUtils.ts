@@ -989,7 +989,7 @@ function hasEnabledOptions(options: PolicyCategories | PolicyTag[]): boolean {
  */
 function sortCategories(categories: Record<string, Category>): Category[] {
     // Sorts categories alphabetically by name.
-    const sortedCategories = Object.values(categories).sort((a, b) => a.name.localeCompare(b.name));
+    const sortedCategories = Object.values(categories).sort((a, b) => localeCompare(b.name, a.name));
 
     // An object that respects nesting of categories. Also, can contain only uniq categories.
     const hierarchy: Hierarchy = {};

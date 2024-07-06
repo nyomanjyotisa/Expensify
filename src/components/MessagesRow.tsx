@@ -47,7 +47,7 @@ function MessagesRow({messages = {}, type, onClose = () => {}, containerStyles, 
                 type={type}
             />
             {canDismiss && (
-                <Tooltip text={translate('common.close')}>
+                <Tooltip text="TEsttt">
                     <PressableWithoutFeedback
                         onPress={onClose}
                         style={[styles.touchableButtonImage]}

@@ -44,26 +44,6 @@ function switchToOldDot() {
             key: ONYXKEYS.IS_SWITCHING_TO_OLD_DOT,
             value: false,
         },
-        {
-            onyxMethod: Onyx.METHOD.SET,
-            key: ONYXKEYS.FORMS.EXIT_SURVEY_REASON_FORM,
-            value: null,
-        },
-        {
-            onyxMethod: Onyx.METHOD.SET,
-            key: ONYXKEYS.FORMS.EXIT_SURVEY_REASON_FORM_DRAFT,
-            value: null,
-        },
-        {
-            onyxMethod: Onyx.METHOD.SET,
-            key: ONYXKEYS.FORMS.EXIT_SURVEY_RESPONSE_FORM,
-            value: null,
-        },
-        {
-            onyxMethod: Onyx.METHOD.SET,
-            key: ONYXKEYS.FORMS.EXIT_SURVEY_RESPONSE_FORM_DRAFT,
-            value: null,
-        },
     ];
 
     // eslint-disable-next-line rulesdir/no-api-side-effects-method

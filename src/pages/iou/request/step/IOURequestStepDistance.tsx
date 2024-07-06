@@ -118,7 +118,7 @@ function IOURequestStepDistance({
         } else if (iouType === CONST.IOU.TYPE.TRACK) {
             buttonText = translate('iou.trackExpense');
         } else {
-            buttonText = translate('iou.submitExpense');
+            buttonText = "submitExpense8";
         }
     }
 

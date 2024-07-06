@@ -6,6 +6,8 @@ import CONST from '@src/CONST';
 import type {Report, ReportAction} from '@src/types/onyx';
 import ReportActionItem from './ReportActionItem';
 import ReportActionItemParentAction from './ReportActionItemParentAction';
+import { useOnyx } from 'react-native-onyx';
+import ONYXKEYS from '@src/ONYXKEYS';
 
 type ReportActionsListItemRendererProps = {
     /** All the data of the action item */
@@ -143,6 +145,11 @@ function ReportActionsListItemRenderer({
             reportAction.childOwnerAccountID,
         ],
     );
+
+
+    const test = useOnyx(`${ONYXKEYS.COLLECTION.REPORT_ACTIONS}${report.reportID}`)
+
+    console.log(test, 'useOnyx(`${ONYXKEYS.COLLECTION.REPORT_ACTIONS}${originalReportID}`)')
 
     return shouldDisplayParentAction ? (
         <ReportActionItemParentAction

@@ -80,6 +80,7 @@ function WorkspaceCategoriesPage({route}: WorkspaceCategoriesPageProps) {
         setSelectedCategories({});
     }, [isFocused]);
 
+    // sorting satu
     const categoryList = useMemo<PolicyOption[]>(
         () =>
             Object.values(policyCategories ?? {})
@@ -276,6 +277,8 @@ function WorkspaceCategoriesPage({route}: WorkspaceCategoriesPageProps) {
             )}
         </View>
     );
+
+    console.log('categoryList')
 
     return (
         <AccessOrNotFoundWrapper
