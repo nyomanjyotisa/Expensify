@@ -18,19 +18,19 @@ import * as IOU from '@userActions/IOU';
 import CONST from '@src/CONST';
 import * as ReportUtils from '@libs/ReportUtils';
 
-type TrackExpensePageOnyxProps = {
+type SubmitExpensePageOnyxProps = {
     /** Session info for the currently logged in user. */
     session: OnyxEntry<Session>;
 };
 
-type TrackExpensePageProps = TrackExpensePageOnyxProps & StackScreenProps<AuthScreensParamList, typeof SCREENS.TRACK_EXPENSE>;
+type SubmitExpensePageProps = SubmitExpensePageOnyxProps & StackScreenProps<AuthScreensParamList, typeof SCREENS.SUBMIT_EXPENSE>;
 
 /*
  * This is a "utility page", that does this:
- *     - If the user is authenticated, find their self DM and and start a Track Expense
+ *     - If the user is authenticated, start Submit Expense
  *     - Else re-route to the login page
  */
-function TrackExpensePage({session}: TrackExpensePageProps) {
+function SubmitExpensePage({session}: SubmitExpensePageProps) {
     const styles = useThemeStyles();
     const isUnmounted = useRef(false);
 
@@ -42,9 +42,7 @@ function TrackExpensePage({session}: TrackExpensePageProps) {
                     return;
                 }
                 Navigation.goBack();
-                ReportUtils.getSelfDMReportID().then((reportID) => {
-                    IOU.startMoneyRequest(CONST.IOU.TYPE.TRACK, reportID ?? '-1');
-                });
+                IOU.startMoneyRequest(CONST.IOU.TYPE.SUBMIT, ReportUtils.generateReportID());
             });
         } else {
             Navigation.navigate();
@@ -59,7 +57,7 @@ function TrackExpensePage({session}: TrackExpensePageProps) {
     );
 
     return (
-        <ScreenWrapper testID={TrackExpensePage.displayName}>
+        <ScreenWrapper testID={SubmitExpensePage.displayName}>
             <View style={[styles.borderBottom]}>
                 <ReportHeaderSkeletonView onBackButtonPress={Navigation.goBack} />
             </View>
@@ -68,10 +66,10 @@ function TrackExpensePage({session}: TrackExpensePageProps) {
     );
 }
 
-TrackExpensePage.displayName = 'TrackExpensePage';
+SubmitExpensePage.displayName = 'SubmitExpensePage';
 
-export default withOnyx<TrackExpensePageProps, TrackExpensePageOnyxProps>({
+export default withOnyx<SubmitExpensePageProps, SubmitExpensePageOnyxProps>({
     session: {
         key: ONYXKEYS.SESSION,
     },
-})(TrackExpensePage);
+})(SubmitExpensePage);

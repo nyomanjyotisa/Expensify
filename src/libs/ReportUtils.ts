@@ -1093,6 +1093,20 @@ function findSelfDMReportID(): string | undefined {
     return selfDMReport?.reportID;
 }
 
+function getSelfDMReportID(): Promise<string | undefined> {
+    return new Promise((resolve) => {
+        let interval = setInterval(function() {
+            const allReports = ReportConnection.getAllReports();
+
+            if (typeof allReports === 'undefined') return;
+            clearInterval(interval);
+
+            const selfDMReport = Object.values(allReports).find((report) => isSelfDM(report) && !isThread(report));
+            resolve(selfDMReport?.reportID);
+        }, 100);
+    });
+}
+
 /**
  * Checks if the supplied report belongs to workspace based on the provided params. If the report's policyID is _FAKE_ or has no value, it means this report is a DM.
  * In this case report and workspace members must be compared to determine whether the report belongs to the workspace.
@@ -7146,6 +7160,7 @@ export {
     doesTransactionThreadHaveViolations,
     findLastAccessedReport,
     findSelfDMReportID,
+    getSelfDMReportID,
     formatReportLastMessageText,
     generateReportID,
     getAddWorkspaceRoomOrChatReportErrors,
