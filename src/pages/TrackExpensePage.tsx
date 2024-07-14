@@ -17,10 +17,15 @@ import type {Session} from '@src/types/onyx';
 import * as IOU from '@userActions/IOU';
 import CONST from '@src/CONST';
 import * as ReportUtils from '@libs/ReportUtils';
+import ROUTES from '@src/ROUTES';
+import useNetwork from '@hooks/useNetwork';
 
 type TrackExpensePageOnyxProps = {
     /** Session info for the currently logged in user. */
     session: OnyxEntry<Session>;
+
+    /** Has user seen track expense training interstitial */
+    hasSeenTrackTraining: OnyxEntry<boolean>;
 };
 
 type TrackExpensePageProps = TrackExpensePageOnyxProps & StackScreenProps<AuthScreensParamList, typeof SCREENS.TRACK_EXPENSE>;
@@ -30,9 +35,10 @@ type TrackExpensePageProps = TrackExpensePageOnyxProps & StackScreenProps<AuthSc
  *     - If the user is authenticated, find their self DM and and start a Track Expense
  *     - Else re-route to the login page
  */
-function TrackExpensePage({session}: TrackExpensePageProps) {
+function TrackExpensePage({session, hasSeenTrackTraining}: TrackExpensePageProps) {
     const styles = useThemeStyles();
     const isUnmounted = useRef(false);
+    const {isOffline} = useNetwork();
 
     useFocusEffect(() => {
         if (session && 'authToken' in session) {
@@ -42,6 +48,11 @@ function TrackExpensePage({session}: TrackExpensePageProps) {
                     return;
                 }
                 IOU.startMoneyRequest(CONST.IOU.TYPE.TRACK, ReportUtils.findSelfDMReportID() ?? '-1')
+                if (!hasSeenTrackTraining && !isOffline) {
+                    setTimeout(() => {
+                        Navigation.navigate(ROUTES.TRACK_TRAINING_MODAL);
+                    }, CONST.ANIMATED_TRANSITION);
+                }
             });
         } else {
             Navigation.navigate();
@@ -70,5 +81,8 @@ TrackExpensePage.displayName = 'TrackExpensePage';
 export default withOnyx<TrackExpensePageProps, TrackExpensePageOnyxProps>({
     session: {
         key: ONYXKEYS.SESSION,
+    },
+    hasSeenTrackTraining: {
+        key: ONYXKEYS.NVP_HAS_SEEN_TRACK_TRAINING,
     },
 })(TrackExpensePage);
