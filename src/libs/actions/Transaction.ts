@@ -124,7 +124,7 @@ function saveWaypoint(transactionID: string, index: string, waypoint: RecentWayp
         return;
     }
     const recentWaypointAlreadyExists = recentWaypoints.find((recentWaypoint) => recentWaypoint?.address === waypoint?.address);
-    if (!recentWaypointAlreadyExists && waypoint !== null) {
+    if (!recentWaypointAlreadyExists && waypoint !== null && waypoint.lat !== 0 && waypoint.lng !== 0) {
         const clonedWaypoints = lodashClone(recentWaypoints);
         clonedWaypoints.unshift(waypoint);
         Onyx.merge(ONYXKEYS.NVP_RECENT_WAYPOINTS, clonedWaypoints.slice(0, CONST.RECENT_WAYPOINTS_NUMBER));
