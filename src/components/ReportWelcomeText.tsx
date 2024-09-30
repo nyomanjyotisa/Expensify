@@ -78,7 +78,7 @@ function ReportWelcomeText({report, policy, personalDetails}: ReportWelcomeTextP
         }
 
         return translate('reportActionsView.sayHello');
-    }, [isChatRoom, isInvoiceRoom, isSelfDM, isSystemChat, translate, reportName]);
+    }, [isChatRoom, isInvoiceRoom, isSelfDM, isSystemChat, translate, report?.reportName]);
 
     return (
         <>
@@ -134,7 +134,7 @@ function ReportWelcomeText({report, policy, personalDetails}: ReportWelcomeTextP
                                     onPress={navigateToReport}
                                     suppressHighlighting
                                 >
-                                    {ReportUtils.getReportName(report)}
+                                    {report?.reportName}
                                 </Text>
                             )}
                             {welcomeMessage.phrase2 !== undefined && <Text>{welcomeMessage.phrase2}</Text>}

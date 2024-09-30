@@ -111,7 +111,15 @@ function HeaderView({report, parentReportAction, reportID, onNavigationMenuButto
     );
 
     const renderAdditionalText = () => {
-        if (shouldShowSubtitle() || isPersonalExpenseChat || !policyName || !isEmptyObject(parentNavigationSubtitleData) || isSelfDM) {
+        if (
+            shouldShowSubtitle() ||
+            isPersonalExpenseChat ||
+            !policyName ||
+            !isEmptyObject(parentNavigationSubtitleData) ||
+            isSelfDM ||
+            ReportUtils.isUserCreatedPolicyRoom(report) ||
+            ReportUtils.isDefaultRoom(report)
+        ) {
             return null;
         }
         return (

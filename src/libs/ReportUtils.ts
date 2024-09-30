@@ -3880,7 +3880,9 @@ function getReportName(
     }
 
     if (isUserCreatedPolicyRoom(report) || isDefaultRoom(report)) {
-        formattedName = report?.policyName + ' • ' + report?.reportName;
+        const policyName = report?.policyName ?? '';
+        const reportName = report?.reportName ?? '';
+        formattedName = [policyName, reportName].filter(Boolean).join(' • ');
     }
 
     if (isSelfDM(report)) {
@@ -3936,7 +3938,7 @@ function getPayeeName(report: OnyxEntry<Report>): string | undefined {
  * Get either the policyName or domainName the chat is tied to
  */
 function getChatRoomSubtitle(report: OnyxEntry<Report>): string | undefined {
-    if (isChatThread(report)) {
+    if (isChatThread(report) || isUserCreatedPolicyRoom(report) || isDefaultRoom(report)) {
         return '';
     }
     if (isSelfDM(report)) {
