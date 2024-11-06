@@ -86,6 +86,7 @@ const loadLogOutPreviousUserPage = () => require<ReactComponentModule>('../../..
 const loadConciergePage = () => require<ReactComponentModule>('../../../pages/ConciergePage').default;
 const loadTrackExpensePage = () => require<ReactComponentModule>('../../../pages/TrackExpensePage').default;
 const loadSubmitExpensePage = () => require<ReactComponentModule>('../../../pages/SubmitExpensePage').default;
+const loadCompleteTask = () => require<ReactComponentModule>('../../../pages/SelfTour').default;
 const loadProfileAvatar = () => require<ReactComponentModule>('../../../pages/settings/Profile/ProfileAvatar').default;
 const loadWorkspaceAvatar = () => require<ReactComponentModule>('../../../pages/workspace/WorkspaceAvatar').default;
 const loadReportAvatar = () => require<ReactComponentModule>('../../../pages/ReportAvatar').default;
@@ -459,6 +460,11 @@ function AuthScreens({session, lastOpenedPublicRoomID, initialLastUpdateIDApplie
                         name={SCREENS.SUBMIT_EXPENSE}
                         options={defaultScreenOptions}
                         getComponent={loadSubmitExpensePage}
+                    />
+                    <RootStack.Screen
+                        name={SCREENS.SELF_TOUR}
+                        options={defaultScreenOptions}
+                        getComponent={loadCompleteTask}
                     />
                     <RootStack.Screen
                         name={SCREENS.ATTACHMENTS}

@@ -169,7 +169,6 @@ function FloatingActionButtonAndPopover({onHideCreateMenu, onShowCreateMenu}: Fl
     const canSendInvoice = useMemo(() => PolicyUtils.canSendInvoice(allPolicies as OnyxCollection<OnyxTypes.Policy>, session?.email), [allPolicies, session?.email]);
     const {environment} = useEnvironment();
     const [introSelected] = useOnyx(ONYXKEYS.NVP_INTRO_SELECTED);
-    const navatticURL = getNavatticURL(environment, introSelected?.choice);
     const [hasSeenTour = false] = useOnyx(ONYXKEYS.NVP_ONBOARDING, {
         selector: hasSeenTourSelector,
     });
@@ -447,8 +446,7 @@ function FloatingActionButtonAndPopover({onHideCreateMenu, onShowCreateMenu}: Fl
                                   text: translate('tour.takeATwoMinuteTour'),
                                   description: translate('tour.exploreExpensify'),
                                   onSelected: () => {
-                                      Welcome.setSelfTourViewed();
-                                      Link.openExternalLink(navatticURL);
+                                      Navigation.navigate(ROUTES.SELF_TOUR)
                                   },
                               },
                           ]

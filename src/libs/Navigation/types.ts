@@ -1543,6 +1543,7 @@ type AuthScreensParamList = CentralPaneScreensParamList &
         [SCREENS.CONCIERGE]: undefined;
         [SCREENS.TRACK_EXPENSE]: undefined;
         [SCREENS.SUBMIT_EXPENSE]: undefined;
+        [SCREENS.SELF_TOUR]: undefined;
         [SCREENS.ATTACHMENTS]: {
             reportID: string;
             source: string;

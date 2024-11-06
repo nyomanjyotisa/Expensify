@@ -10,6 +10,7 @@ const PROTECTED_SCREENS = {
     ATTACHMENTS: 'Attachments',
     TRACK_EXPENSE: 'TrackExpense',
     SUBMIT_EXPENSE: 'SubmitExpense',
+    SELF_TOUR: 'SelfTour',
 } as const;
 
 const SCREENS = {

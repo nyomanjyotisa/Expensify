@@ -17,7 +17,6 @@ import useTheme from '@hooks/useTheme';
 import useThemeStyles from '@hooks/useThemeStyles';
 import interceptAnonymousUser from '@libs/interceptAnonymousUser';
 import * as ReportUtils from '@libs/ReportUtils';
-import {getNavatticURL} from '@libs/TourUtils';
 import * as TripsResevationUtils from '@libs/TripReservationUtils';
 import variables from '@styles/variables';
 import * as IOU from '@userActions/IOU';
@@ -25,6 +24,8 @@ import * as Link from '@userActions/Link';
 import CONST from '@src/CONST';
 import ONYXKEYS from '@src/ONYXKEYS';
 import type {SearchDataTypes} from '@src/types/onyx/SearchResults';
+import Navigation from '@libs/Navigation/Navigation';
+import ROUTES from '@src/ROUTES';
 
 type EmptySearchViewProps = {
     type: SearchDataTypes;
@@ -96,7 +97,6 @@ function EmptySearchView({type}: EmptySearchViewProps) {
 
     const [onboardingPurpose] = useOnyx(ONYXKEYS.NVP_INTRO_SELECTED, {selector: (introSelected) => introSelected?.choice});
     const {environment} = useEnvironment();
-    const navatticURL = getNavatticURL(environment, onboardingPurpose);
 
     const content = useMemo(() => {
         switch (type) {
@@ -123,7 +123,7 @@ function EmptySearchView({type}: EmptySearchViewProps) {
                     title: translate('search.searchResults.emptyExpenseResults.title'),
                     subtitle: translate('search.searchResults.emptyExpenseResults.subtitle'),
                     buttons: [
-                        {buttonText: translate('emptySearchView.takeATour'), buttonAction: () => Link.openExternalLink(navatticURL)},
+                        {buttonText: translate('emptySearchView.takeATour'), buttonAction: () => Navigation.navigate(ROUTES.SELF_TOUR)},
                         {
                             buttonText: translate('iou.createExpense'),
                             buttonAction: () => interceptAnonymousUser(() => IOU.startMoneyRequest(CONST.IOU.TYPE.CREATE, ReportUtils.generateReportID())),
@@ -143,7 +143,7 @@ function EmptySearchView({type}: EmptySearchViewProps) {
                     headerContentStyles: styles.emptyStateFolderWebStyles,
                 };
         }
-    }, [type, StyleUtils, translate, theme, styles, subtitleComponent, ctaErrorMessage, navatticURL]);
+    }, [type, StyleUtils, translate, theme, styles, subtitleComponent, ctaErrorMessage]);
 
     return (
         <EmptyStateComponent

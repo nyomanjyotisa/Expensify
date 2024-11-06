@@ -68,6 +68,7 @@ const ROUTES = {
     TRANSACTION_HOLD_REASON_RHP: 'search/hold',
 
     // This is a utility route used to go to the user's concierge chat, or the sign-in page if the user's not authenticated
+    SELF_TOUR: 'self-tour',
     CONCIERGE: 'concierge',
     TRACK_EXPENSE: 'track-expense',
     SUBMIT_EXPENSE: 'submit-expense',
