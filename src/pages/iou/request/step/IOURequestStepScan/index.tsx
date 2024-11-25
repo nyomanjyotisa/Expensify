@@ -1,6 +1,7 @@
 import {useIsFocused} from '@react-navigation/native';
 import {Str} from 'expensify-common';
 import heic2any from 'heic2any';
+import {heicTo, isHeic} from 'heic-to';
 import React, {useCallback, useContext, useEffect, useMemo, useReducer, useRef, useState} from 'react';
 import {ActivityIndicator, PanResponder, PixelRatio, View} from 'react-native';
 import {useOnyx} from 'react-native-onyx';
@@ -509,46 +510,49 @@ function IOURequestStepScan({
         });
     };
 
-    const convertReceipt = (originalFile: FileObject, isPdfValidated?: boolean) => {
+    const convertReceipt = async (originalFile: FileObject, isPdfValidated?: boolean) => {
         if (originalFile?.type?.startsWith('image')) {
             if (!originalFile.uri) {
                 console.error('File URI is undefined');
                 return;
             }
-            FileUtils.verifyFileFormat({fileUri: originalFile.uri, formatSignatures: CONST.HEIC_SIGNATURES})
-                .then((isHEIC) => {
-                    if (isHEIC && originalFile.uri) {
-                        setIsLoadingReceipt(true);
 
-                        fetch(originalFile.uri)
-                            .then((response) => response.blob())
-                            .then((blob) => heic2any({blob, toType: 'image/jpeg'}))
-                            .then((convertedBlob) => {
-                                const blobToUse = Array.isArray(convertedBlob) ? convertedBlob.at(0) : convertedBlob;
+            try {
+                const response = await fetch(originalFile.uri);
+                const blob = await response.blob();
 
-                                if (!blobToUse) {
-                                    console.error('Converted blob is undefined.');
-                                    setIsLoadingReceipt(false);
-                                    return;
-                                }
-
-                                const fileName = originalFile.name ? originalFile.name.replace(/\.heic$/i, '.jpg') : 'converted-image.jpg';
-
-                                const jpegFile = new File([blobToUse], fileName, {type: 'image/jpeg'});
-
-                                setReceiptAndNavigate(jpegFile, isPdfValidated);
-                            })
-                            .catch((err) => {
-                                console.error('Error converting HEIC to JPEG:', err);
-                                setIsLoadingReceipt(false);
-                            });
-                    } else {
-                        setReceiptAndNavigate(originalFile, isPdfValidated);
-                    }
-                })
-                .catch((err) => {
-                    console.error('Error verifying file format:', err);
+                const fileFromBlob = new File([blob], originalFile.name || 'temp-file', {
+                    type: blob.type,
                 });
+
+                const isHEIC = await isHeic(fileFromBlob);
+
+                if (isHEIC) {
+                    setIsLoadingReceipt(true);
+
+                    try {
+                        const convertedBlob = await heicTo({
+                            blob,
+                            type: 'image/jpeg',
+                            quality: 0.8,
+                        });
+
+                        const fileName = originalFile.name ? originalFile.name.replace(/\.heic$/i, '.jpg') : 'converted-image.jpg';
+
+                        const jpegFile = new File([convertedBlob], fileName, {type: 'image/jpeg'});
+
+                        setReceiptAndNavigate(jpegFile, isPdfValidated);
+                    } catch (err) {
+                        console.error('Error converting HEIC to JPEG:', err);
+                    } finally {
+                        setIsLoadingReceipt(false);
+                    }
+                } else {
+                    setReceiptAndNavigate(originalFile, isPdfValidated);
+                }
+            } catch (err) {
+                console.error('Error processing the file:', err);
+            }
         } else {
             setReceiptAndNavigate(originalFile, isPdfValidated);
         }
