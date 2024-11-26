@@ -1,5 +1,6 @@
 import {useFocusEffect} from '@react-navigation/core';
 import {Str} from 'expensify-common';
+import {manipulateAsync, SaveFormat} from 'expo-image-manipulator';
 import React, {useCallback, useMemo, useRef, useState} from 'react';
 import {ActivityIndicator, Alert, AppState, InteractionManager, View} from 'react-native';
 import {Gesture, GestureDetector} from 'react-native-gesture-handler';
@@ -429,6 +430,57 @@ function IOURequestStepScan({
         [transactionID],
     );
 
+    const convertReceipt = async (originalFile: FileObject, isPdfValidated?: boolean): Promise<void> => {
+        return new Promise((resolve, reject) => {
+            if (!originalFile?.type?.startsWith('image')) {
+                setReceiptAndNavigate(originalFile, isPdfValidated);
+                return resolve();
+            }
+
+            const fileUri = originalFile.uri;
+            if (!fileUri) {
+                console.error('File URI is undefined');
+                return reject(new Error('File URI is undefined'));
+            }
+
+            FileUtils.verifyFileFormat({fileUri, formatSignatures: CONST.HEIC_SIGNATURES})
+                .then((isHEIC) => {
+                    if (isHEIC) {
+                        setIsLoadingReceipt(true);
+
+                        manipulateAsync(fileUri, [], {compress: 0.8, format: SaveFormat.JPEG})
+                            .then((manipResult) => {
+                                const convertedFile = {
+                                    uri: manipResult.uri,
+                                    name: originalFile.name?.replace(/\.heic$/i, '.jpg'),
+                                    type: 'image/jpeg',
+                                    size: originalFile.size,
+                                    width: manipResult.width,
+                                    height: manipResult.height,
+                                };
+
+                                setReceiptAndNavigate(convertedFile, isPdfValidated);
+                                resolve();
+                            })
+                            .catch((err) => {
+                                console.error('Error converting HEIC to JPEG:', err);
+                                reject(err);
+                            })
+                            .finally(() => {
+                                setIsLoadingReceipt(false);
+                            });
+                    } else {
+                        setReceiptAndNavigate(originalFile, isPdfValidated);
+                        resolve();
+                    }
+                })
+                .catch((err) => {
+                    console.error('Error verifying file format:', err);
+                    reject(err);
+                });
+        });
+    };
+
     /**
      * Sets the Receipt objects and navigates the user to the next page
      */
@@ -577,7 +629,7 @@ function IOURequestStepScan({
                     onLoadSuccess={() => {
                         setPdfFile(null);
                         if (pdfFile) {
-                            setReceiptAndNavigate(pdfFile, true);
+                            convertReceipt(pdfFile, true);
                         }
                     }}
                     onPassword={() => {
@@ -647,7 +699,7 @@ function IOURequestStepScan({
                             style={[styles.alignItemsStart]}
                             onPress={() => {
                                 openPicker({
-                                    onPicked: (data) => setReceiptAndNavigate(data.at(0) ?? {}),
+                                    onPicked: (data) => convertReceipt(data.at(0) ?? {}),
                                 });
                             }}
                         >

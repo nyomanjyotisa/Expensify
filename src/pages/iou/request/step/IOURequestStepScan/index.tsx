@@ -1,6 +1,5 @@
 import {useIsFocused} from '@react-navigation/native';
 import {Str} from 'expensify-common';
-import heic2any from 'heic2any';
 import {heicTo, isHeic} from 'heic-to';
 import React, {useCallback, useContext, useEffect, useMemo, useReducer, useRef, useState} from 'react';
 import {ActivityIndicator, PanResponder, PixelRatio, View} from 'react-native';
@@ -534,7 +533,6 @@ function IOURequestStepScan({
                         const convertedBlob = await heicTo({
                             blob,
                             type: 'image/jpeg',
-                            quality: 0.8,
                         });
 
                         const fileName = originalFile.name ? originalFile.name.replace(/\.heic$/i, '.jpg') : 'converted-image.jpg';
