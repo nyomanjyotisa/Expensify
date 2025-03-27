@@ -1,6 +1,7 @@
-import React, {useMemo} from 'react';
+import React, {useEffect, useMemo} from 'react';
 import {View} from 'react-native';
 import {useOnyx} from 'react-native-onyx';
+import Onyx from 'react-native-onyx';
 import useIsAuthenticated from '@hooks/useIsAuthenticated';
 import useLocalize from '@hooks/useLocalize';
 import useStyleUtils from '@hooks/useStyleUtils';
@@ -46,12 +47,26 @@ function TestToolsModal() {
         return true;
     }, []);
 
+    useEffect(() => {
+        const handlePopState = (event: any) => {
+            const isTestToolsState = event.state?.modal === 'TestTools';
+            if (isTestToolsState && !isTestToolsModalOpen) {
+                Onyx.set(ONYXKEYS.IS_TEST_TOOLS_MODAL_OPEN, true);
+            } else if (!isTestToolsState && isTestToolsModalOpen) {
+                Onyx.set(ONYXKEYS.IS_TEST_TOOLS_MODAL_OPEN, false);
+            }
+        };
+
+        window.addEventListener('popstate', handlePopState);
+        return () => window.removeEventListener('popstate', handlePopState);
+    }, [isTestToolsModalOpen]);
+
     return (
         <Modal
             isVisible={!!isTestToolsModalOpen}
             type={CONST.MODAL.MODAL_TYPE.CENTERED_SMALL}
             onClose={closeTestToolsModal}
-            shouldHandleNavigationBack
+            shouldHandleNavigationBack={false}
         >
             <View style={[StyleUtils.getTestToolsModalStyle(windowWidth)]}>
                 <Text

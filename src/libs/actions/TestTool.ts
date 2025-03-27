@@ -17,7 +17,13 @@ Onyx.connect({
 function toggleTestToolsModal() {
     const toggle = () => {
         const toggleIsTestToolsModalOpen = () => {
-            Onyx.set(ONYXKEYS.IS_TEST_TOOLS_MODAL_OPEN, !isTestToolsModalOpen);
+            const newIsOpen = !isTestToolsModalOpen;
+            if (newIsOpen) {
+                window.history.pushState({modal: 'TestTools'}, '');
+            } else {
+                window.history.back();
+            }
+            Onyx.set(ONYXKEYS.IS_TEST_TOOLS_MODAL_OPEN, newIsOpen);
         };
         if (!isTestToolsModalOpen) {
             close(toggleIsTestToolsModalOpen);
@@ -34,6 +40,7 @@ function closeTestToolsModal() {
     if (!isTestToolsModalOpen) {
         return;
     }
+    window.history.back();
     Onyx.set(ONYXKEYS.IS_TEST_TOOLS_MODAL_OPEN, false);
 }
 
