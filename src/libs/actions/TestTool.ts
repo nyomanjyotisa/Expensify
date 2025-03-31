@@ -19,9 +19,13 @@ function toggleTestToolsModal() {
         const toggleIsTestToolsModalOpen = () => {
             const newIsOpen = !isTestToolsModalOpen;
             if (newIsOpen) {
-                window.history.pushState({modal: 'TestTools'}, '');
+                if (typeof window !== 'undefined' && window.history && window.history.pushState) {
+                    window.history.pushState({modal: 'TestTools'}, '');
+                }
             } else {
-                window.history.back();
+                if (typeof window !== 'undefined' && window.history && window.history.back) {
+                    window.history.back();
+                }
             }
             Onyx.set(ONYXKEYS.IS_TEST_TOOLS_MODAL_OPEN, newIsOpen);
         };
@@ -40,7 +44,9 @@ function closeTestToolsModal() {
     if (!isTestToolsModalOpen) {
         return;
     }
-    window.history.back();
+    if (typeof window !== 'undefined' && window.history && typeof window.history.back === 'function') {
+        window.history.back();
+    }
     Onyx.set(ONYXKEYS.IS_TEST_TOOLS_MODAL_OPEN, false);
 }
 

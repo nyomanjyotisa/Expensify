@@ -44,24 +44,32 @@ function SearchRouterContextProvider({children}: ChildrenProps) {
             }
         };
 
-        window.addEventListener('popstate', handlePopState);
-        return () => window.removeEventListener('popstate', handlePopState);
+        if (window.history && window.addEventListener) {
+            window.addEventListener('popstate', handlePopState);
+            return () => window.removeEventListener('popstate', handlePopState);
+        }
     }, [isSearchRouterDisplayed]);
 
     const routerContext = useMemo(() => {
         const openSearchRouter = () => {
-            Modal.close(
-                () => {
-                    window.history.pushState({modal: 'SearchRouter'}, '');
-                    setIsSearchRouterDisplayed(true);
-                    searchRouterDisplayedRef.current = true;
-                },
-                false,
-                true,
-            );
+            if (window.history && window.history.pushState) {
+                Modal.close(
+                    () => {
+                        window.history.pushState({modal: 'SearchRouter'}, '');
+                        setIsSearchRouterDisplayed(true);
+                        searchRouterDisplayedRef.current = true;
+                    },
+                    false,
+                    true,
+                );
+            } else {
+                // Fallback behavior for native mobile (if needed)
+                setIsSearchRouterDisplayed(true);
+                searchRouterDisplayedRef.current = true;
+            }
         };
         const closeSearchRouter = () => {
-            if (window.history.state?.modal === 'SearchRouter') {
+            if (window.history && window.history.state?.modal === 'SearchRouter') {
                 window.history.back();
             }
             setIsSearchRouterDisplayed(false);
