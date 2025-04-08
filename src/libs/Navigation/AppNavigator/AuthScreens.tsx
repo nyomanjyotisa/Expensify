@@ -64,6 +64,7 @@ import LeftModalNavigator from './Navigators/LeftModalNavigator';
 import MigratedUserWelcomeModalNavigator from './Navigators/MigratedUserWelcomeModalNavigator';
 import OnboardingModalNavigator from './Navigators/OnboardingModalNavigator';
 import RightModalNavigator from './Navigators/RightModalNavigator';
+import TestToolsModalNavigator from './Navigators/TestToolsModalNavigator';
 import WelcomeVideoModalNavigator from './Navigators/WelcomeVideoModalNavigator';
 import useRootNavigatorScreenOptions from './useRootNavigatorScreenOptions';
 
@@ -595,6 +596,12 @@ function AuthScreens({session, lastOpenedPublicRoomID, initialLastUpdateIDApplie
                     name={NAVIGATORS.MIGRATED_USER_MODAL_NAVIGATOR}
                     options={rootNavigatorScreenOptions.basicModalNavigator}
                     component={MigratedUserWelcomeModalNavigator}
+                />
+                <RootStack.Screen
+                    name={NAVIGATORS.TEST_TOOLS_MODAL_NAVIGATOR}
+                    options={rootNavigatorScreenOptions.basicModalNavigator}
+                    component={TestToolsModalNavigator}
+                    listeners={modalScreenListeners}
                 />
                 <RootStack.Screen
                     name={NAVIGATORS.FEATURE_TRANING_MODAL_NAVIGATOR}
