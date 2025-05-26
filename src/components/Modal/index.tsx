@@ -1,6 +1,7 @@
 import React, {useEffect, useRef, useState} from 'react';
 import useStyleUtils from '@hooks/useStyleUtils';
 import useTheme from '@hooks/useTheme';
+import ModalNavigationManager from '@libs/ModalNavigationManager';
 import StatusBar from '@libs/StatusBar';
 import CONST from '@src/CONST';
 import BaseModal from './BaseModal';
@@ -11,6 +12,8 @@ function Modal({fullscreen = true, onModalHide = () => {}, type, onModalShow = (
     const theme = useTheme();
     const StyleUtils = useStyleUtils();
     const [previousStatusBarColor, setPreviousStatusBarColor] = useState<string>();
+    // Generate a unique ID for this modal instance
+    const modalId = useRef(`modal-${Date.now()}-${Math.floor(Math.random() * 10000)}`).current;
 
     const setStatusBarColor = (color = theme.appBG) => {
         if (!fullscreen) {
@@ -22,18 +25,27 @@ function Modal({fullscreen = true, onModalHide = () => {}, type, onModalShow = (
 
     const hideModal = () => {
         onModalHide();
-        if ((window.history.state as WindowState)?.shouldGoBack) {
+        if (shouldHandleNavigationBack) {
+            ModalNavigationManager.unregisterModal(modalId);
+        }
+        // Only trigger back navigation if this modal was the one that created the history state
+        // This prevents nested modals from causing multiple history back actions
+        if ((window.history.state as WindowState)?.shouldGoBack && (!shouldHandleNavigationBack || ModalNavigationManager.isTopModal(modalId))) {
             window.history.back();
         }
     };
 
     const handlePopStateRef = useRef(() => {
-        rest.onClose();
+        // Only close this modal if it's the top one in the stack
+        if (!shouldHandleNavigationBack || ModalNavigationManager.isTopModal(modalId)) {
+            rest.onClose();
+        }
     });
 
     const showModal = () => {
         if (shouldHandleNavigationBack) {
-            window.history.pushState({shouldGoBack: true}, '', null);
+            ModalNavigationManager.registerModal(modalId);
+            window.history.pushState({shouldGoBack: true, modalId}, '', null);
             window.addEventListener('popstate', handlePopStateRef.current);
         }
         onModalShow?.();
@@ -42,8 +54,11 @@ function Modal({fullscreen = true, onModalHide = () => {}, type, onModalShow = (
     useEffect(
         () => () => {
             window.removeEventListener('popstate', handlePopStateRef.current);
+            if (shouldHandleNavigationBack) {
+                ModalNavigationManager.unregisterModal(modalId);
+            }
         },
-        [],
+        [modalId, shouldHandleNavigationBack],
     );
 
     const onModalWillShow = () => {

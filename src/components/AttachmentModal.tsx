@@ -155,6 +155,9 @@ type AttachmentModalProps = {
     shouldDisableSendButton?: boolean;
 
     attachmentLink?: string;
+
+    /** Whether to handle navigation back when modal show. */
+    shouldHandleNavigationBack?: boolean;
 };
 
 function AttachmentModal({
@@ -189,6 +192,7 @@ function AttachmentModal({
     iouAction,
     iouType: iouTypeProp,
     attachmentLink = '',
+    shouldHandleNavigationBack,
 }: AttachmentModalProps) {
     const styles = useThemeStyles();
     const [isModalOpen, setIsModalOpen] = useState(defaultOpen);
@@ -515,6 +519,7 @@ function AttachmentModal({
     return (
         <>
             <Modal
+                shouldHandleNavigationBack={shouldHandleNavigationBack}
                 type={modalType}
                 onClose={isOverlayModalVisible ? closeConfirmModal : closeModal}
                 isVisible={isModalOpen}

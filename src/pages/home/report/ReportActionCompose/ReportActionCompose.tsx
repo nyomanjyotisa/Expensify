@@ -416,6 +416,7 @@ function ReportActionCompose({
                         ]}
                     >
                         <AttachmentModal
+                            shouldHandleNavigationBack
                             headerTitle={translate('reportActionCompose.sendAttachment')}
                             onConfirm={addAttachment}
                             onModalShow={() => setIsAttachmentPreviewActive(true)}
