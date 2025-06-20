@@ -139,7 +139,18 @@ function isValidExpirationDate(string: string): boolean {
 
     // Use the last of the month to check if the expiration date is in the future or not
     const expirationDate = `${getYearFromExpirationDateString(string)}-${getMonthFromExpirationDateString(string)}-01`;
-    return isAfter(new Date(expirationDate), endOfMonth(new Date()));
+    // Check if expiration date is in the past
+    if (!isAfter(new Date(expirationDate), endOfMonth(new Date()))) {
+        return false;
+    }
+
+    // Check if expiration date is more than 50 years in the future
+    const maxAllowedDate = addYears(new Date(), 50);
+    if (isAfter(new Date(expirationDate), maxAllowedDate)) {
+        return false;
+    }
+
+    return true;
 }
 
 /**

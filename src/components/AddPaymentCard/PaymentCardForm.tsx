@@ -142,6 +142,7 @@ function PaymentCardForm({
     const cardNumberRef = useRef<AnimatedTextInputRef>(null);
 
     const [cardNumber, setCardNumber] = useState('');
+    const [expirationDate, setExpirationDate] = useState('');
 
     const validate = (values: FormOnyxValues<typeof ONYXKEYS.FORMS.ADD_PAYMENT_CARD_FORM>): FormInputErrors<typeof ONYXKEYS.FORMS.ADD_PAYMENT_CARD_FORM> => {
         const errors = getFieldRequiredErrors(values, REQUIRED_FIELDS);
@@ -154,7 +155,7 @@ function PaymentCardForm({
             errors.cardNumber = translate(label.error.cardNumber);
         }
 
-        if (values.expirationDate && !isValidExpirationDate(values.expirationDate)) {
+        if (values.expirationDate && !isValidExpirationDate(values.expirationDate.replace(/ /g, ''))) {
             errors.expirationDate = translate(label.error.expirationDate);
         }
 
@@ -210,6 +211,59 @@ function PaymentCardForm({
         setCardNumber(validCardNumber);
     }, []);
 
+    const onChangeExpirationDate = useCallback((newValue: string) => {
+        // Remove all non-digit characters
+        const cleanValue = newValue.replace(/\D/g, '');
+
+        // Limit to 4 digits
+        let limitedValue = cleanValue.slice(0, 4);
+
+        // Handle repeated zeros - keep only one zero
+        if (limitedValue === '00' || limitedValue === '000' || limitedValue === '0000') {
+            limitedValue = '0';
+        }
+
+        // Handle formatting for months
+        if (limitedValue.length === 1) {
+            const firstDigit = parseInt(limitedValue, 10);
+            // If user types 2-9, auto-format to 0X
+            if (firstDigit >= 2 && firstDigit <= 9) {
+                limitedValue = '0' + firstDigit;
+            }
+        } else if (limitedValue.length >= 2) {
+            const monthPart = limitedValue.slice(0, 2);
+            const monthNumber = parseInt(monthPart, 10);
+            // If month is greater than 12, correct it to a valid month
+            if (monthNumber > 12) {
+                // Take the first digit and make it 0X, then use the second digit as the start of year
+                limitedValue = '0' + limitedValue[0] + limitedValue.slice(1);
+            }
+        }
+
+        // Format as MM / YY
+        let formattedValue = '';
+        if (limitedValue.length >= 1) {
+            formattedValue = limitedValue.slice(0, 2);
+        }
+        if (limitedValue.length >= 3) {
+            formattedValue += ' / ' + limitedValue.slice(2, 4);
+        }
+
+        setExpirationDate(formattedValue);
+    }, []);
+
+    const handleSubmit = useCallback(
+        (values: FormOnyxValues<typeof ONYXKEYS.FORMS.ADD_PAYMENT_CARD_FORM>) => {
+            // Remove "/" and spaces from expiration date before processing
+            const cleanValues = {
+                ...values,
+                expirationDate: values.expirationDate?.replace(/[\/\s]/g, '') ?? '',
+            };
+            addPaymentCard(cleanValues);
+        },
+        [addPaymentCard],
+    );
+
     if (!shouldShowPaymentCardForm || isLoadingOnyxValue(metadata)) {
         return null;
     }
@@ -220,7 +274,7 @@ function PaymentCardForm({
             <FormProvider
                 formID={ONYXKEYS.FORMS.ADD_PAYMENT_CARD_FORM}
                 validate={validate}
-                onSubmit={addPaymentCard}
+                onSubmit={handleSubmit}
                 submitButtonText={submitButtonText}
                 scrollContextEnabled
                 style={[styles.mh5, styles.flexGrow1]}
@@ -250,7 +304,6 @@ function PaymentCardForm({
                 <View style={[styles.flexRow, styles.mt5]}>
                     <View style={[styles.mr2, styles.flex1]}>
                         <InputWrapper
-                            defaultValue={data?.expirationDate}
                             InputComponent={TextInput}
                             inputID={INPUT_IDS.EXPIRATION_DATE}
                             label={translate(label.defaults.expiration)}
@@ -258,7 +311,8 @@ function PaymentCardForm({
                             role={CONST.ROLE.PRESENTATION}
                             placeholder={translate(label.defaults.expirationDate)}
                             inputMode={CONST.INPUT_MODE.NUMERIC}
-                            maxLength={4}
+                            onChangeText={onChangeExpirationDate}
+                            value={expirationDate}
                         />
                     </View>
                     <View style={styles.flex1}>
