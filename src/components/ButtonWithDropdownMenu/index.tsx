@@ -1,5 +1,5 @@
 import type {RefObject} from 'react';
-import React, {useCallback, useEffect, useRef, useState} from 'react';
+import React, {useCallback, useEffect, useRef, useState, forwardRef, useImperativeHandle} from 'react';
 import {View} from 'react-native';
 import type {GestureResponderEvent} from 'react-native';
 import Button from '@components/Button';
@@ -17,43 +17,45 @@ import CONST from '@src/CONST';
 import type {AnchorPosition} from '@src/styles';
 import type {ButtonWithDropdownMenuProps} from './types';
 
-function ButtonWithDropdownMenu<IValueType>({
-    success = true,
-    isSplitButton = true,
-    isLoading = false,
-    isDisabled = false,
-    pressOnEnter = false,
-    shouldAlwaysShowDropdownMenu = false,
-    menuHeaderText = '',
-    customText,
-    style,
-    disabledStyle,
-    buttonSize = CONST.DROPDOWN_BUTTON_SIZE.MEDIUM,
-    anchorAlignment = {
-        horizontal: CONST.MODAL.ANCHOR_ORIGIN_HORIZONTAL.RIGHT,
-        vertical: CONST.MODAL.ANCHOR_ORIGIN_VERTICAL.TOP, // we assume that popover menu opens below the button, anchor is at TOP
-    },
-    popoverHorizontalOffsetType,
-    buttonRef,
-    onPress,
-    options,
-    onOptionSelected,
-    onSubItemSelected,
-    onOptionsMenuShow,
-    onOptionsMenuHide,
-    enterKeyEventListenerPriority = 0,
-    wrapperStyle,
-    useKeyboardShortcuts = false,
-    shouldUseStyleUtilityForAnchorPosition = false,
-    defaultSelectedIndex = 0,
-    shouldShowSelectedItemCheck = false,
-    testID,
-    secondLineText = '',
-    icon,
-    shouldPopoverUseScrollView = false,
-    containerStyles,
-    shouldUseModalPaddingStyle = true,
-}: ButtonWithDropdownMenuProps<IValueType>) {
+function ButtonWithDropdownMenuInner<IValueType>(props: ButtonWithDropdownMenuProps<IValueType>, ref: React.Ref<{setIsMenuVisible: (visible: boolean) => void}>) {
+    const {
+        success = true,
+        isSplitButton = true,
+        isLoading = false,
+        isDisabled = false,
+        pressOnEnter = false,
+        shouldAlwaysShowDropdownMenu = false,
+        menuHeaderText = '',
+        customText,
+        style,
+        disabledStyle,
+        buttonSize = CONST.DROPDOWN_BUTTON_SIZE.MEDIUM,
+        anchorAlignment = {
+            horizontal: CONST.MODAL.ANCHOR_ORIGIN_HORIZONTAL.RIGHT,
+            vertical: CONST.MODAL.ANCHOR_ORIGIN_VERTICAL.TOP, // we assume that popover menu opens below the button, anchor is at TOP
+        },
+        popoverHorizontalOffsetType,
+        buttonRef,
+        onPress,
+        options,
+        onOptionSelected,
+        onSubItemSelected,
+        onOptionsMenuShow,
+        onOptionsMenuHide,
+        enterKeyEventListenerPriority = 0,
+        wrapperStyle,
+        useKeyboardShortcuts = false,
+        shouldUseStyleUtilityForAnchorPosition = false,
+        defaultSelectedIndex = 0,
+        shouldShowSelectedItemCheck = false,
+        testID,
+        secondLineText = '',
+        icon,
+        shouldPopoverUseScrollView = false,
+        containerStyles,
+        shouldUseModalPaddingStyle = true,
+    } = props;
+
     const theme = useTheme();
     const styles = useThemeStyles();
     const StyleUtils = useStyleUtils();
@@ -144,6 +146,10 @@ function ButtonWithDropdownMenu<IValueType>({
         [isMenuVisible, isSplitButton, onPress, selectedItem?.value],
     );
 
+    useImperativeHandle(ref, () => ({
+        setIsMenuVisible,
+    }));
+
     return (
         <View style={wrapperStyle}>
             {shouldAlwaysShowDropdownMenu || options.length > 1 ? (
@@ -232,7 +238,9 @@ function ButtonWithDropdownMenu<IValueType>({
                     onModalShow={onOptionsMenuShow}
                     onItemSelected={(selectedSubitem, index, event) => {
                         onSubItemSelected?.(selectedSubitem, index, event);
-                        setIsMenuVisible(false);
+                        if (selectedSubitem.shouldCloseModalOnSelect !== false) {
+                            setIsMenuVisible(false);
+                        }
                     }}
                     anchorPosition={shouldUseStyleUtilityForAnchorPosition ? styles.popoverButtonDropdownMenuOffset(windowWidth) : popoverAnchorPosition}
                     shouldShowSelectedItemCheck={shouldShowSelectedItemCheck}
@@ -270,6 +278,6 @@ function ButtonWithDropdownMenu<IValueType>({
     );
 }
 
-ButtonWithDropdownMenu.displayName = 'ButtonWithDropdownMenu';
-
+ButtonWithDropdownMenuInner.displayName = 'ButtonWithDropdownMenu';
+const ButtonWithDropdownMenu = forwardRef(ButtonWithDropdownMenuInner);
 export default ButtonWithDropdownMenu;
