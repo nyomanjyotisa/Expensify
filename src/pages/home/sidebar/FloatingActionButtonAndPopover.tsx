@@ -208,12 +208,7 @@ function FloatingActionButtonAndPopover({onHideCreateMenu, onShowCreateMenu, isT
         [quickActionReport?.policyID],
     );
 
-    const handleLongPress = useCallback(() => {
-        // Only execute on narrow layout
-        if (!shouldUseNarrowLayout) {
-            return;
-        }
-
+    const startScanOnLongPress = useCallback(() => {
         interceptAnonymousUser(() => {
             if (shouldRedirectToExpensifyClassic) {
                 setModalVisible(true);
@@ -222,7 +217,7 @@ function FloatingActionButtonAndPopover({onHideCreateMenu, onShowCreateMenu, isT
             // Start the scan flow directly
             startMoneyRequest(CONST.IOU.TYPE.CREATE, generateReportID(), CONST.IOU.REQUEST_TYPE.SCAN, false);
         });
-    }, [shouldRedirectToExpensifyClassic, interceptAnonymousUser, startMoneyRequest]);
+    }, [shouldRedirectToExpensifyClassic]);
 
     /**
      * Check if LHN status changed from active to inactive.
@@ -612,7 +607,7 @@ function FloatingActionButtonAndPopover({onHideCreateMenu, onShowCreateMenu, isT
                 isActive={isCreateMenuActive}
                 ref={fabRef}
                 onPress={toggleCreateMenu}
-                onLongPress={handleLongPress}
+                onLongPress={startScanOnLongPress}
             />
         </View>
     );

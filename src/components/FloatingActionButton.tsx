@@ -93,6 +93,11 @@ function FloatingActionButton({onPress, onLongPress, isActive, accessibilityLabe
     };
 
     const handleLongPress = (event: GestureResponderEvent | KeyboardEvent | undefined) => {
+        // Only execute on narrow layout - prevent event from firing on wide screens
+        if (!shouldUseNarrowLayout) {
+            return;
+        }
+
         hideProductTrainingTooltip();
         // Drop focus to avoid blue focus ring.
         fabPressable.current?.blur();
