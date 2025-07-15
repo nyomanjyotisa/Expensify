@@ -10,6 +10,7 @@ import useOnyx from '@hooks/useOnyx';
 import useThemeStyles from '@hooks/useThemeStyles';
 import {upgradeToCorporate} from '@libs/actions/Policy/Policy';
 import {canModifyPlan, getOwnedPaidPolicies} from '@libs/PolicyUtils';
+import {getEffectiveAutoRenewValue} from '@libs/SubscriptionUtils';
 import Navigation from '@navigation/Navigation';
 import {getCurrentUserAccountID} from '@userActions/Report';
 import CONST from '@src/CONST';
@@ -121,7 +122,7 @@ function SubscriptionPlanCardActionButton({subscriptionPlan, isFromComparisonMod
     const autoIncrease = privateSubscription?.addNewUsersAutomatically ? translate('subscription.subscriptionSettings.on') : translate('subscription.subscriptionSettings.off');
     const subscriptionType = isAnnual ? translate('subscription.subscriptionSettings.annual') : translate('subscription.details.payPerUse');
     const subscriptionSize = `${privateSubscription?.userCount ?? translate('subscription.subscriptionSettings.none')}`;
-    const autoRenew = privateSubscription?.autoRenew ? translate('subscription.subscriptionSettings.on') : translate('subscription.subscriptionSettings.off');
+    const autoRenew = getEffectiveAutoRenewValue(privateSubscription) ? translate('subscription.subscriptionSettings.on') : translate('subscription.subscriptionSettings.off');
 
     return (
         <MenuItemWithTopDescription

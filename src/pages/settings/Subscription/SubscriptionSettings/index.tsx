@@ -1,6 +1,7 @@
 import React, {useContext} from 'react';
 import type {StyleProp, TextStyle} from 'react-native';
 import {View} from 'react-native';
+import type {OnyxEntry} from 'react-native-onyx';
 import {DelegateNoAccessContext} from '@components/DelegateNoAccessModalProvider';
 import HeaderWithBackButton from '@components/HeaderWithBackButton';
 import Icon from '@components/Icon';
@@ -27,6 +28,7 @@ import useThemeStyles from '@hooks/useThemeStyles';
 import {convertToShortDisplayString} from '@libs/CurrencyUtils';
 import {isPolicyAdmin} from '@libs/PolicyUtils';
 import {getSubscriptionPrice} from '@libs/SubscriptionUtils';
+import {getEffectiveAutoRenewValue} from '@libs/SubscriptionUtils';
 import Navigation from '@navigation/Navigation';
 import NotFoundPage from '@pages/ErrorPage/NotFoundPage';
 import {formatSubscriptionEndDate} from '@pages/settings/Subscription/utils';
@@ -128,7 +130,9 @@ function SubscriptionSettings() {
             showDelegateNoAccessModal();
             return;
         }
-        if (!privateSubscription?.autoRenew) {
+        const currentEffectiveValue = getEffectiveAutoRenewValue(privateSubscription);
+
+        if (!currentEffectiveValue) {
             updateSubscriptionAutoRenew(true);
             return;
         }
@@ -219,7 +223,7 @@ function SubscriptionSettings() {
                                     title={translate('subscription.subscriptionSettings.autoRenew')}
                                     switchAccessibilityLabel={translate('subscription.subscriptionSettings.autoRenew')}
                                     onToggle={handleAutoRenewToggle}
-                                    isActive={privateSubscription?.autoRenew ?? false}
+                                    isActive={getEffectiveAutoRenewValue(privateSubscription)}
                                 />
                                 {!!autoRenewalDate && (
                                     <Text style={[styles.mutedTextLabel, styles.mt2]}>{translate('subscription.subscriptionSettings.renewsOn', {date: autoRenewalDate})}</Text>

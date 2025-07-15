@@ -10,7 +10,7 @@ import type {PersonalPolicyTypeExcludedProps} from '@pages/settings/Subscription
 import type {SubscriptionType} from '@src/CONST';
 import CONST from '@src/CONST';
 import ONYXKEYS from '@src/ONYXKEYS';
-import type {BillingGraceEndPeriod, BillingStatus, Fund, FundList, IntroSelected, Policy, StripeCustomerID} from '@src/types/onyx';
+import type {BillingGraceEndPeriod, BillingStatus, Fund, FundList, IntroSelected, Policy, PrivateSubscription, StripeCustomerID} from '@src/types/onyx';
 import {isEmptyObject} from '@src/types/utils/EmptyObject';
 import {convertToShortDisplayString} from './CurrencyUtils';
 import {translateLocal} from './Localize';
@@ -685,11 +685,20 @@ function getSubscriptionPlanInfo(
     };
 }
 
+/**
+ * Helper function to determine the effective auto-renew state
+ * For annual subscriptions, auto-renew should default to true when undefined
+ */
+function getEffectiveAutoRenewValue(subscription: OnyxEntry<PrivateSubscription>): boolean {
+    return subscription?.autoRenew ?? true;
+}
+
 export {
     calculateRemainingFreeTrialDays,
     doesUserHavePaymentCardAdded,
     getAmountOwed,
     getCardForSubscriptionBilling,
+    getEffectiveAutoRenewValue,
     getFreeTrialText,
     getOverdueGracePeriodDate,
     getSubscriptionStatus,
