@@ -55,6 +55,7 @@ function BaseTestDriveModal({
             avoidKeyboard={avoidKeyboard}
             shouldShowConfirmationLoader={shouldShowConfirmationLoader}
             shouldUseScrollView
+            shouldDisableScrollViewBounce
             canConfirmWhileOffline={canConfirmWhileOffline}
             shouldCallOnHelpWhenModalHidden={shouldCallOnHelpWhenModalHidden}
         >
