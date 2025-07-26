@@ -16,6 +16,7 @@ import useLocalize from '@hooks/useLocalize';
 import useOnyx from '@hooks/useOnyx';
 import useThemeStyles from '@hooks/useThemeStyles';
 import {extractFirstAndLastNameFromAvailableDetails} from '@libs/PersonalDetailsUtils';
+import Navigation from '@libs/Navigation/Navigation';
 import {parsePhoneNumber} from '@libs/PhoneNumber';
 import {
     getFieldRequiredErrors,
@@ -197,6 +198,7 @@ function AdditionalDetailsStep({currentUserPersonalDetails}: AdditionalDetailsSt
                         }}
                         streetTranslationKey={fieldNameTranslationKeys.addressStreet}
                         shouldSaveDraft
+                        onStateSelectorBackdropPress={() => Navigation.dismissModal()}
                     />
                     <InputWrapper
                         InputComponent={TextInput}

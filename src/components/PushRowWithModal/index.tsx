@@ -38,6 +38,9 @@ type PushRowWithModalProps = {
 
     /**  Callback to call when the picker modal is dismissed */
     onBlur?: () => void;
+
+    /** Function to call when the backdrop is pressed */
+    onBackdropPress?: () => void;
 };
 
 function PushRowWithModal({
@@ -52,6 +55,7 @@ function PushRowWithModal({
     onInputChange = () => {},
     stateInputIDToReset,
     onBlur = () => {},
+    onBackdropPress,
 }: PushRowWithModalProps) {
     const [isModalVisible, setIsModalVisible] = useState(false);
     const shouldBlurOnCloseRef = useRef(true);
@@ -96,6 +100,7 @@ function PushRowWithModal({
                 optionsList={optionsList}
                 headerTitle={modalHeaderTitle}
                 searchInputTitle={searchInputTitle}
+                onBackdropPress={onBackdropPress}
             />
         </>
     );

@@ -59,6 +59,9 @@ type AddressFormProps = {
 
     /** Indicates if zip code format should be validated */
     shouldValidateZipCodeFormat?: boolean;
+
+    /** Function to call when the state selector backdrop is pressed */
+    onStateSelectorBackdropPress?: () => void;
 };
 
 const PROVINCES_LIST_OPTIONS = (Object.keys(COMMON_CONST.PROVINCES) as Array<keyof typeof COMMON_CONST.PROVINCES>).reduce(
@@ -93,6 +96,7 @@ function AddressFormFields({
     onCountryChange,
     shouldAllowCountryChange = true,
     shouldValidateZipCodeFormat = true,
+    onStateSelectorBackdropPress,
 }: AddressFormProps) {
     const {translate} = useLocalize();
     const styles = useThemeStyles();
@@ -152,6 +156,7 @@ function AddressFormFields({
                         defaultValue={defaultValues?.state}
                         inputID={inputKeys.state ?? 'stateInput'}
                         errorText={errors?.state ? translate('bankAccount.error.addressState') : ''}
+                        onBackdropPress={onStateSelectorBackdropPress}
                     />
                 </View>
             )}

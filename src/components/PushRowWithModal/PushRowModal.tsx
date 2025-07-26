@@ -1,4 +1,5 @@
 import React, {useMemo} from 'react';
+import {InteractionManager} from 'react-native';
 import HeaderWithBackButton from '@components/HeaderWithBackButton';
 import Modal from '@components/Modal';
 import ScreenWrapper from '@components/ScreenWrapper';
@@ -31,6 +32,9 @@ type PushRowModalProps = {
 
     /** The title of the search input */
     searchInputTitle?: string;
+
+    /** Function to call when the backdrop is pressed */
+    onBackdropPress?: () => void;
 };
 
 type ListItemType = {
@@ -40,7 +44,7 @@ type ListItemType = {
     isSelected: boolean;
 };
 
-function PushRowModal({isVisible, selectedOption, onOptionChange, onClose, optionsList, headerTitle, searchInputTitle}: PushRowModalProps) {
+function PushRowModal({isVisible, selectedOption, onOptionChange, onClose, optionsList, headerTitle, searchInputTitle, onBackdropPress}: PushRowModalProps) {
     const {translate} = useLocalize();
 
     const [searchValue, debouncedSearchValue, setSearchValue] = useDebouncedState('');
@@ -67,6 +71,17 @@ function PushRowModal({isVisible, selectedOption, onOptionChange, onClose, optio
         setSearchValue('');
     };
 
+    const handleBackdropPress = () => {
+        if (onBackdropPress) {
+            handleClose();
+            InteractionManager.runAfterInteractions(() => {
+                onBackdropPress();
+            });
+        } else {
+            handleClose();
+        }
+    };
+
     const searchResults = searchOptions(debouncedSearchValue, options);
     const headerMessage = debouncedSearchValue.trim() && !searchResults.length ? translate('common.noResultsFound') : '';
 
@@ -78,6 +93,7 @@ function PushRowModal({isVisible, selectedOption, onOptionChange, onClose, optio
             onModalHide={handleClose}
             shouldUseCustomBackdrop
             shouldUseReanimatedModal
+            onBackdropPress={handleBackdropPress}
         >
             <ScreenWrapper
                 includePaddingTop={false}
