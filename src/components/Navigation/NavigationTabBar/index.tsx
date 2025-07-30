@@ -3,6 +3,7 @@ import React, {memo, useCallback, useEffect, useState} from 'react';
 import {View} from 'react-native';
 import type {ValueOf} from 'type-fest';
 import HeaderGap from '@components/HeaderGap';
+import Hoverable from '@components/Hoverable';
 import Icon from '@components/Icon';
 import * as Expensicons from '@components/Icon/Expensicons';
 import ImageSVG from '@components/ImageSVG';
@@ -218,94 +219,111 @@ function NavigationTabBar({selectedTab, isTooltipAllowed = false, isTopLevelBar 
                             shouldHideOnNavigate={false}
                             onTooltipPress={navigateToChats}
                         >
-                            <PressableWithFeedback
-                                onPress={navigateToChats}
-                                role={CONST.ROLE.BUTTON}
-                                accessibilityLabel={translate('common.inbox')}
-                                style={styles.leftNavigationTabBarItem}
-                            >
-                                <View>
-                                    <Icon
-                                        src={Expensicons.Inbox}
-                                        fill={selectedTab === NAVIGATION_TABS.HOME ? theme.iconMenu : theme.icon}
-                                        width={variables.iconBottomBar}
-                                        height={variables.iconBottomBar}
-                                    />
-                                    {!!chatTabBrickRoad && (
-                                        <View
-                                            style={styles.navigationTabBarStatusIndicator(chatTabBrickRoad === CONST.BRICK_ROAD_INDICATOR_STATUS.INFO ? theme.iconSuccessFill : theme.danger)}
-                                        />
-                                    )}
-                                </View>
-                                <Text
-                                    numberOfLines={2}
-                                    style={[
-                                        styles.textSmall,
-                                        styles.textAlignCenter,
-                                        styles.mt1Half,
-                                        selectedTab === NAVIGATION_TABS.HOME ? styles.textBold : styles.textSupporting,
-                                        styles.navigationTabBarLabel,
-                                    ]}
-                                >
-                                    {translate('common.inbox')}
-                                </Text>
-                            </PressableWithFeedback>
+                            <Hoverable>
+                                {(isHovered) => (
+                                    <PressableWithFeedback
+                                        onPress={navigateToChats}
+                                        role={CONST.ROLE.BUTTON}
+                                        accessibilityLabel={translate('common.inbox')}
+                                        style={[styles.leftNavigationTabBarItem, isHovered && styles.sidebarLinkHover]}
+                                    >
+                                        <View>
+                                            <Icon
+                                                src={Expensicons.Inbox}
+                                                fill={selectedTab === NAVIGATION_TABS.HOME ? theme.iconMenu : isHovered ? theme.successHover : theme.icon}
+                                                width={variables.iconBottomBar}
+                                                height={variables.iconBottomBar}
+                                            />
+                                            {!!chatTabBrickRoad && (
+                                                <View
+                                                    style={styles.navigationTabBarStatusIndicator(
+                                                        chatTabBrickRoad === CONST.BRICK_ROAD_INDICATOR_STATUS.INFO ? theme.iconSuccessFill : theme.danger,
+                                                    )}
+                                                />
+                                            )}
+                                        </View>
+                                        <Text
+                                            numberOfLines={2}
+                                            style={[
+                                                styles.textSmall,
+                                                styles.textAlignCenter,
+                                                styles.mt1Half,
+                                                selectedTab === NAVIGATION_TABS.HOME ? styles.textBold : styles.textSupporting,
+                                                styles.navigationTabBarLabel,
+                                                isHovered && {color: theme.text},
+                                            ]}
+                                        >
+                                            {translate('common.inbox')}
+                                        </Text>
+                                    </PressableWithFeedback>
+                                )}
+                            </Hoverable>
                         </EducationalTooltip>
-                        <PressableWithFeedback
-                            onPress={navigateToSearch}
-                            role={CONST.ROLE.BUTTON}
-                            accessibilityLabel={translate('common.reports')}
-                            style={styles.leftNavigationTabBarItem}
-                        >
-                            <View>
-                                <Icon
-                                    src={Expensicons.MoneySearch}
-                                    fill={selectedTab === NAVIGATION_TABS.SEARCH ? theme.iconMenu : theme.icon}
-                                    width={variables.iconBottomBar}
-                                    height={variables.iconBottomBar}
-                                />
-                            </View>
-                            <Text
-                                numberOfLines={2}
-                                style={[
-                                    styles.textSmall,
-                                    styles.textAlignCenter,
-                                    styles.mt1Half,
-                                    selectedTab === NAVIGATION_TABS.SEARCH ? styles.textBold : styles.textSupporting,
-                                    styles.navigationTabBarLabel,
-                                ]}
-                            >
-                                {translate('common.reports')}
-                            </Text>
-                        </PressableWithFeedback>
-                        <PressableWithFeedback
-                            onPress={showWorkspaces}
-                            role={CONST.ROLE.BUTTON}
-                            accessibilityLabel={translate('common.workspacesTabTitle')}
-                            style={styles.leftNavigationTabBarItem}
-                        >
-                            <View>
-                                <Icon
-                                    src={Expensicons.Buildings}
-                                    fill={selectedTab === NAVIGATION_TABS.WORKSPACES ? theme.iconMenu : theme.icon}
-                                    width={variables.iconBottomBar}
-                                    height={variables.iconBottomBar}
-                                />
-                                {!!workspacesTabIndicatorStatus && <View style={styles.navigationTabBarStatusIndicator(workspacesTabIndicatorColor)} />}
-                            </View>
-                            <Text
-                                numberOfLines={preferredLocale === CONST.LOCALES.DE || preferredLocale === CONST.LOCALES.NL ? 1 : 2}
-                                style={[
-                                    styles.textSmall,
-                                    styles.textAlignCenter,
-                                    styles.mt1Half,
-                                    selectedTab === NAVIGATION_TABS.WORKSPACES ? styles.textBold : styles.textSupporting,
-                                    styles.navigationTabBarLabel,
-                                ]}
-                            >
-                                {translate('common.workspacesTabTitle')}
-                            </Text>
-                        </PressableWithFeedback>
+                        <Hoverable>
+                            {(isHovered) => (
+                                <PressableWithFeedback
+                                    onPress={navigateToSearch}
+                                    role={CONST.ROLE.BUTTON}
+                                    accessibilityLabel={translate('common.reports')}
+                                    style={[styles.leftNavigationTabBarItem, isHovered && styles.sidebarLinkHover]}
+                                >
+                                    <View>
+                                        <Icon
+                                            src={Expensicons.MoneySearch}
+                                            fill={selectedTab === NAVIGATION_TABS.SEARCH ? theme.iconMenu : isHovered ? theme.successHover : theme.icon}
+                                            width={variables.iconBottomBar}
+                                            height={variables.iconBottomBar}
+                                        />
+                                    </View>
+                                    <Text
+                                        numberOfLines={2}
+                                        style={[
+                                            styles.textSmall,
+                                            styles.textAlignCenter,
+                                            styles.mt1Half,
+                                            selectedTab === NAVIGATION_TABS.SEARCH ? styles.textBold : styles.textSupporting,
+                                            styles.navigationTabBarLabel,
+                                            isHovered && {color: theme.text},
+                                        ]}
+                                    >
+                                        {translate('common.reports')}
+                                    </Text>
+                                </PressableWithFeedback>
+                            )}
+                        </Hoverable>
+                        <Hoverable>
+                            {(isHovered) => (
+                                <PressableWithFeedback
+                                    onPress={showWorkspaces}
+                                    role={CONST.ROLE.BUTTON}
+                                    accessibilityLabel={translate('common.workspacesTabTitle')}
+                                    style={[styles.leftNavigationTabBarItem, isHovered && styles.sidebarLinkHover]}
+                                >
+                                    <View>
+                                        <Icon
+                                            src={Expensicons.Buildings}
+                                            fill={selectedTab === NAVIGATION_TABS.WORKSPACES ? theme.iconMenu : isHovered ? theme.successHover : theme.icon}
+                                            width={variables.iconBottomBar}
+                                            height={variables.iconBottomBar}
+                                        />
+                                        {!!workspacesTabIndicatorStatus && <View style={styles.navigationTabBarStatusIndicator(workspacesTabIndicatorColor)} />}
+                                    </View>
+                                    <Text
+                                        numberOfLines={preferredLocale === CONST.LOCALES.DE || preferredLocale === CONST.LOCALES.NL ? 1 : 2}
+                                        style={[
+                                            styles.textSmall,
+                                            styles.textAlignCenter,
+                                            styles.mt1Half,
+                                            selectedTab === NAVIGATION_TABS.WORKSPACES ? styles.textBold : styles.textSupporting,
+                                            styles.navigationTabBarLabel,
+                                            isHovered && {color: theme.text},
+                                        ]}
+                                    >
+                                        {translate('common.workspacesTabTitle')}
+                                    </Text>
+                                </PressableWithFeedback>
+                            )}
+                        </Hoverable>
                         <NavigationTabBarAvatar
                             style={styles.leftNavigationTabBarItem}
                             isSelected={selectedTab === NAVIGATION_TABS.SETTINGS}

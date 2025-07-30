@@ -13,6 +13,7 @@ import useIsHomeRouteActive from '@navigation/helpers/useIsHomeRouteActive';
 import variables from '@styles/variables';
 import CONST from '@src/CONST';
 import ONYXKEYS from '@src/ONYXKEYS';
+import Hoverable from './Hoverable';
 import {PressableWithoutFeedback} from './Pressable';
 import {useProductTrainingContext} from './ProductTrainingContext';
 import EducationalTooltip from './Tooltip/EducationalTooltip';
@@ -45,7 +46,7 @@ type FloatingActionButtonProps = {
 };
 
 function FloatingActionButton({onPress, onLongPress, isActive, accessibilityLabel, role, isTooltipAllowed}: FloatingActionButtonProps, ref: ForwardedRef<HTMLDivElement | View | Text>) {
-    const {success, buttonDefaultBG, textLight} = useTheme();
+    const {success, successHover, buttonDefaultBG, textLight} = useTheme();
     const styles = useThemeStyles();
     const borderRadius = styles.floatingActionButton.borderRadius;
     const fabPressable = useRef<HTMLDivElement | View | Text | null>(null);
@@ -62,6 +63,7 @@ function FloatingActionButton({onPress, onLongPress, isActive, accessibilityLabe
     const fabSize = isLHBVisible ? variables.iconSizeSmall : variables.iconSizeNormal;
 
     const sharedValue = useSharedValue(isActive ? 1 : 0);
+    const hoverSharedValue = useSharedValue(0);
     const buttonRef = ref;
 
     const tooltipHorizontalAnchorAlignment = isLHBVisible ? CONST.MODAL.ANCHOR_ORIGIN_HORIZONTAL.LEFT : CONST.MODAL.ANCHOR_ORIGIN_HORIZONTAL.RIGHT;
@@ -77,7 +79,8 @@ function FloatingActionButton({onPress, onLongPress, isActive, accessibilityLabe
     }, [isActive, sharedValue]);
 
     const animatedStyle = useAnimatedStyle(() => {
-        const backgroundColor = interpolateColor(sharedValue.get(), [0, 1], [success, buttonDefaultBG]);
+        const baseColor = hoverSharedValue.get() > 0 ? successHover : success;
+        const backgroundColor = interpolateColor(sharedValue.get(), [0, 1], [baseColor, buttonDefaultBG]);
 
         return {
             transform: [{rotate: `${sharedValue.get() * 135}deg`}],
@@ -118,39 +121,46 @@ function FloatingActionButton({onPress, onLongPress, isActive, accessibilityLabe
             shouldHideOnNavigate={false}
             onTooltipPress={toggleFabAction}
         >
-            <PressableWithoutFeedback
-                ref={(el) => {
-                    fabPressable.current = el ?? null;
-                    if (buttonRef && 'current' in buttonRef) {
-                        buttonRef.current = el ?? null;
-                    }
-                }}
-                style={[
-                    styles.h100,
-                    styles.navigationTabBarItem,
-
-                    // Prevent text selection on touch devices (e.g. on long press)
-                    canUseTouchScreen() && styles.userSelectNone,
-                ]}
-                accessibilityLabel={accessibilityLabel}
-                onPress={toggleFabAction}
-                onLongPress={longPressFabAction}
-                role={role}
-                shouldUseHapticsOnLongPress={false}
-                testID="floating-action-button"
+            <Hoverable
+                onHoverIn={() => hoverSharedValue.set(1)}
+                onHoverOut={() => hoverSharedValue.set(0)}
             >
-                <Animated.View style={[styles.floatingActionButton, {borderRadius}, isLHBVisible && styles.floatingActionButtonSmall, animatedStyle]}>
-                    <Svg
-                        width={fabSize}
-                        height={fabSize}
+                {() => (
+                    <PressableWithoutFeedback
+                        ref={(el) => {
+                            fabPressable.current = el ?? null;
+                            if (buttonRef && 'current' in buttonRef) {
+                                buttonRef.current = el ?? null;
+                            }
+                        }}
+                        style={[
+                            styles.h100,
+                            styles.navigationTabBarItem,
+
+                            // Prevent text selection on touch devices (e.g. on long press)
+                            canUseTouchScreen() && styles.userSelectNone,
+                        ]}
+                        accessibilityLabel={accessibilityLabel}
+                        onPress={toggleFabAction}
+                        onLongPress={longPressFabAction}
+                        role={role}
+                        shouldUseHapticsOnLongPress={false}
+                        testID="floating-action-button"
                     >
-                        <AnimatedPath
-                            d={isLHBVisible ? SMALL_FAB_PATH : FAB_PATH}
-                            fill={textLight}
-                        />
-                    </Svg>
-                </Animated.View>
-            </PressableWithoutFeedback>
+                        <Animated.View style={[styles.floatingActionButton, {borderRadius}, isLHBVisible && styles.floatingActionButtonSmall, animatedStyle]}>
+                            <Svg
+                                width={fabSize}
+                                height={fabSize}
+                            >
+                                <AnimatedPath
+                                    d={isLHBVisible ? SMALL_FAB_PATH : FAB_PATH}
+                                    fill={textLight}
+                                />
+                            </Svg>
+                        </Animated.View>
+                    </PressableWithoutFeedback>
+                )}
+            </Hoverable>
         </EducationalTooltip>
     );
 }

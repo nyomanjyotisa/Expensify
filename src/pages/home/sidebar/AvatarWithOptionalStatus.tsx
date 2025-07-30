@@ -13,16 +13,22 @@ type AvatarWithOptionalStatusProps = {
     /** Whether the avatar is selected */
     isSelected?: boolean;
 
+    /** Whether the avatar is hovered */
+    isHovered?: boolean;
+
     /** Style for the Avatar container */
     containerStyle?: StyleProp<ViewStyle>;
 };
 
-function AvatarWithOptionalStatus({emojiStatus = '', isSelected = false, containerStyle}: AvatarWithOptionalStatusProps) {
+function AvatarWithOptionalStatus({emojiStatus = '', isSelected = false, isHovered = false, containerStyle}: AvatarWithOptionalStatusProps) {
     const styles = useThemeStyles();
 
     return (
         <View style={[styles.sidebarStatusAvatarContainer, containerStyle]}>
-            <ProfileAvatarWithIndicator isSelected={isSelected} />
+            <ProfileAvatarWithIndicator
+                isSelected={isSelected}
+                isHovered={isHovered}
+            />
             <View style={styles.sidebarStatusAvatar}>
                 <View>
                     <Text

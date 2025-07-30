@@ -13,11 +13,14 @@ type ProfileAvatarWithIndicatorProps = {
     /** Whether the avatar is selected */
     isSelected?: boolean;
 
+    /** Whether the avatar is hovered */
+    isHovered?: boolean;
+
     /** Avatar Container styles */
     containerStyles?: StyleProp<ViewStyle>;
 };
 
-function ProfileAvatarWithIndicator({isSelected = false, containerStyles}: ProfileAvatarWithIndicatorProps) {
+function ProfileAvatarWithIndicator({isSelected = false, isHovered = false, containerStyles}: ProfileAvatarWithIndicatorProps) {
     const styles = useThemeStyles();
     const currentUserPersonalDetails = useCurrentUserPersonalDetails();
     const [isLoading = true] = useOnyx(ONYXKEYS.IS_LOADING_APP);
@@ -28,7 +31,7 @@ function ProfileAvatarWithIndicator({isSelected = false, containerStyles}: Profi
             style={containerStyles}
         >
             <View style={[styles.pRelative]}>
-                <View style={[isSelected && styles.selectedAvatarBorder, styles.pAbsolute]} />
+                <View style={[(isSelected || isHovered) && styles.selectedAvatarBorder, styles.pAbsolute]} />
                 <AvatarWithIndicator
                     source={currentUserPersonalDetails.avatar}
                     accountID={currentUserPersonalDetails.accountID}

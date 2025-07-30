@@ -18,11 +18,14 @@ type AvatarWithDelegateAvatarProps = {
     /** Whether the avatar is selected */
     isSelected?: boolean;
 
+    /** Whether the avatar is hovered */
+    isHovered?: boolean;
+
     /** Style for the Avatar container */
     containerStyle?: StyleProp<ViewStyle>;
 };
 
-function AvatarWithDelegateAvatar({delegateEmail, isSelected = false, containerStyle}: AvatarWithDelegateAvatarProps) {
+function AvatarWithDelegateAvatar({delegateEmail, isSelected = false, isHovered = false, containerStyle}: AvatarWithDelegateAvatarProps) {
     const styles = useThemeStyles();
 
     // We need to use isSmallScreenWidth instead of shouldUseNarrowLayout to use correct avatar size
@@ -33,7 +36,10 @@ function AvatarWithDelegateAvatar({delegateEmail, isSelected = false, containerS
 
     return (
         <View style={[styles.sidebarStatusAvatarContainer, containerStyle]}>
-            <ProfileAvatarWithIndicator isSelected={isSelected} />
+            <ProfileAvatarWithIndicator
+                isSelected={isSelected}
+                isHovered={isHovered}
+            />
             <View style={[styles.sidebarStatusAvatar]}>
                 <View style={styles.emojiStatusLHN}>
                     <Avatar
