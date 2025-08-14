@@ -141,5 +141,133 @@ describe('Transaction', () => {
 
             expect(getIOUActionForTransactionID(Object.values(reportActions ?? {}), transaction.transactionID)).toBeDefined();
         });
+
+        it('correctly updates report totals when moving transactions between reports', async () => {
+            const oldReport = {
+                reportID: FAKE_OLD_REPORT_ID,
+                ownerAccountID: CURRENT_USER_ID,
+                type: CONST.REPORT.TYPE.EXPENSE,
+                stateNum: CONST.REPORT.STATE_NUM.OPEN,
+                statusNum: CONST.REPORT.STATUS_NUM.OPEN,
+                total: 1000,
+                nonReimbursableTotal: 200,
+            };
+            const targetReport = {
+                reportID: FAKE_NEW_REPORT_ID,
+                ownerAccountID: CURRENT_USER_ID,
+                type: CONST.REPORT.TYPE.EXPENSE,
+                stateNum: CONST.REPORT.STATE_NUM.OPEN,
+                statusNum: CONST.REPORT.STATUS_NUM.OPEN,
+                total: 500,
+                nonReimbursableTotal: 100,
+            };
+            
+            // Create reimbursable transaction
+            const transaction = generateTransaction({
+                reportID: FAKE_OLD_REPORT_ID,
+                amount: 100,
+                reimbursable: true,
+            });
+
+            await Onyx.merge(`${ONYXKEYS.COLLECTION.REPORT}${FAKE_OLD_REPORT_ID}`, oldReport);
+            await Onyx.merge(`${ONYXKEYS.COLLECTION.REPORT}${FAKE_NEW_REPORT_ID}`, targetReport);
+            await Onyx.merge(`${ONYXKEYS.COLLECTION.TRANSACTION}${transaction.transactionID}`, transaction);
+
+            changeTransactionsReport([transaction.transactionID], FAKE_NEW_REPORT_ID);
+            await waitForBatchedUpdates();
+
+            // Verify old report totals are updated
+            const updatedOldReport = await new Promise<any>((resolve) => {
+                const connection = Onyx.connect({
+                    key: `${ONYXKEYS.COLLECTION.REPORT}${FAKE_OLD_REPORT_ID}`,
+                    callback: (value) => {
+                        Onyx.disconnect(connection);
+                        resolve(value);
+                    },
+                });
+            });
+
+            // Verify target report totals are updated
+            const updatedTargetReport = await new Promise<any>((resolve) => {
+                const connection = Onyx.connect({
+                    key: `${ONYXKEYS.COLLECTION.REPORT}${FAKE_NEW_REPORT_ID}`,
+                    callback: (value) => {
+                        Onyx.disconnect(connection);
+                        resolve(value);
+                    },
+                });
+            });
+
+            // Old report should have totals decreased by transaction amounts
+            expect(updatedOldReport.total).toBe(900); // 1000 - 100
+            expect(updatedOldReport.nonReimbursableTotal).toBe(200); // 200 - 0 (fully reimbursable)
+
+            // Target report should have totals increased by transaction amounts
+            expect(updatedTargetReport.total).toBe(600); // 500 + 100
+            expect(updatedTargetReport.nonReimbursableTotal).toBe(100); // 100 + 0 (fully reimbursable)
+        });
+
+        it('correctly handles non-reimbursable transactions when moving between reports', async () => {
+            const oldReport = {
+                reportID: FAKE_OLD_REPORT_ID,
+                ownerAccountID: CURRENT_USER_ID,
+                type: CONST.REPORT.TYPE.EXPENSE,
+                stateNum: CONST.REPORT.STATE_NUM.OPEN,
+                statusNum: CONST.REPORT.STATUS_NUM.OPEN,
+                total: 1000,
+                nonReimbursableTotal: 200,
+            };
+            const targetReport = {
+                reportID: FAKE_NEW_REPORT_ID,
+                ownerAccountID: CURRENT_USER_ID,
+                type: CONST.REPORT.TYPE.EXPENSE,
+                stateNum: CONST.REPORT.STATE_NUM.OPEN,
+                statusNum: CONST.REPORT.STATUS_NUM.OPEN,
+                total: 500,
+                nonReimbursableTotal: 100,
+            };
+            
+            // Create non-reimbursable transaction
+            const transaction = generateTransaction({
+                reportID: FAKE_OLD_REPORT_ID,
+                amount: 100,
+                reimbursable: false,
+            });
+
+            await Onyx.merge(`${ONYXKEYS.COLLECTION.REPORT}${FAKE_OLD_REPORT_ID}`, oldReport);
+            await Onyx.merge(`${ONYXKEYS.COLLECTION.REPORT}${FAKE_NEW_REPORT_ID}`, targetReport);
+            await Onyx.merge(`${ONYXKEYS.COLLECTION.TRANSACTION}${transaction.transactionID}`, transaction);
+
+            changeTransactionsReport([transaction.transactionID], FAKE_NEW_REPORT_ID);
+            await waitForBatchedUpdates();
+
+            const updatedOldReport = await new Promise<any>((resolve) => {
+                const connection = Onyx.connect({
+                    key: `${ONYXKEYS.COLLECTION.REPORT}${FAKE_OLD_REPORT_ID}`,
+                    callback: (value) => {
+                        Onyx.disconnect(connection);
+                        resolve(value);
+                    },
+                });
+            });
+
+            const updatedTargetReport = await new Promise<any>((resolve) => {
+                const connection = Onyx.connect({
+                    key: `${ONYXKEYS.COLLECTION.REPORT}${FAKE_NEW_REPORT_ID}`,
+                    callback: (value) => {
+                        Onyx.disconnect(connection);
+                        resolve(value);
+                    },
+                });
+            });
+
+            // Old report should have totals decreased appropriately
+            expect(updatedOldReport.total).toBe(900); // 1000 - 100
+            expect(updatedOldReport.nonReimbursableTotal).toBe(100); // 200 - 100
+
+            // Target report should have totals increased appropriately
+            expect(updatedTargetReport.total).toBe(600); // 500 + 100
+            expect(updatedTargetReport.nonReimbursableTotal).toBe(200); // 100 + 100
+        });
     });
 });
