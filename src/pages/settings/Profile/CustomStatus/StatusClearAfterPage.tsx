@@ -1,5 +1,7 @@
 import React, {useCallback, useEffect, useMemo, useState} from 'react';
 import type {ValueOf} from 'type-fest';
+import Button from '@components/Button';
+import FixedFooter from '@components/FixedFooter';
 import HeaderWithBackButton from '@components/HeaderWithBackButton';
 import MenuItemWithTopDescription from '@components/MenuItemWithTopDescription';
 import ScreenWrapper from '@components/ScreenWrapper';
@@ -79,6 +81,7 @@ function StatusClearAfterPage() {
 
     const draftClearAfter = customStatus?.clearAfter ?? '';
     const [draftPeriod, setDraftPeriod] = useState(() => getSelectedStatusType(draftClearAfter || clearAfter));
+    const [initialCustomDateTime, setInitialCustomDateTime] = useState('');
     const statusType = useMemo<StatusType[]>(
         () =>
             Object.entries(CONST.CUSTOM_STATUS_TYPES).map(([key, value]) => ({
@@ -109,6 +112,7 @@ function StatusClearAfterPage() {
 
             if (mode.value === CONST.CUSTOM_STATUS_TYPES.CUSTOM) {
                 updateDraftCustomStatus({clearAfter: DateUtils.getOneHourFromNow()});
+                setInitialCustomDateTime(DateUtils.getOneHourFromNow());
             } else {
                 const selectedRange = statusType.find((item) => item.value === mode.value);
                 const calculatedDraftDate = DateUtils.getDateFromStatusType(selectedRange?.value ?? CONST.CUSTOM_STATUS_TYPES.NEVER);
@@ -119,10 +123,19 @@ function StatusClearAfterPage() {
         [draftPeriod, statusType],
     );
 
+    const saveCustomStatus = useCallback(() => {
+        Navigation.goBack(ROUTES.SETTINGS_STATUS);
+    }, []);
+
     useEffect(() => {
         updateDraftCustomStatus({
             clearAfter: draftClearAfter || clearAfter,
         });
+        
+        // Store initial custom date/time when entering custom mode
+        if (draftPeriod === CONST.CUSTOM_STATUS_TYPES.CUSTOM) {
+            setInitialCustomDateTime(draftClearAfter || clearAfter);
+        }
 
         // eslint-disable-next-line react-compiler/react-compiler, react-hooks/exhaustive-deps
     }, []);
@@ -173,6 +186,9 @@ function StatusClearAfterPage() {
         [statusType, updateMode, listFooterContent],
     );
 
+    const shouldShowSaveButton = draftPeriod === CONST.CUSTOM_STATUS_TYPES.CUSTOM && draftClearAfter !== initialCustomDateTime;
+    const isSaveButtonDisabled = !!customDateError || !!customTimeError;
+
     return (
         <ScreenWrapper
             includeSafeAreaPaddingBottom
@@ -185,6 +201,18 @@ function StatusClearAfterPage() {
             />
             <Text style={[styles.textNormal, styles.mh5, styles.mv4]}>{translate('statusPage.whenClearStatus')}</Text>
             {timePeriodOptions()}
+            {shouldShowSaveButton && (
+                <FixedFooter style={[styles.mtAuto]}>
+                    <Button
+                        success
+                        large
+                        text={translate('common.save')}
+                        onPress={saveCustomStatus}
+                        isDisabled={isSaveButtonDisabled}
+                        pressOnEnter
+                    />
+                </FixedFooter>
+            )}
         </ScreenWrapper>
     );
 }
