@@ -4580,6 +4580,12 @@ const translations = {
                 title: 'Cannot delete or disable all categories',
                 description: `At least one category must remain enabled because your workspace requires categories.`,
             },
+            disableAllCategoriesWarning: {
+                title: 'Disable all categories?',
+                description: 'Disabling all of your categories will also disable the categories feature. If you want to re-enable it, you will need to head to More features.',
+                confirmButton: 'Disable all categories',
+                cancelButton: 'Cancel',
+            },
         },
         moreFeatures: {
             subtitle: 'Use the toggles below to enable more features as you grow. Each feature will appear in the navigation menu for further customization.',

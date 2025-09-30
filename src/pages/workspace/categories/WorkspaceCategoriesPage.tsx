@@ -41,7 +41,7 @@ import {canUseTouchScreen} from '@libs/DeviceCapabilities';
 import Navigation from '@libs/Navigation/Navigation';
 import type {PlatformStackScreenProps} from '@libs/Navigation/PlatformStackNavigation/types';
 import type {WorkspaceSplitNavigatorParamList} from '@libs/Navigation/types';
-import {isDisablingOrDeletingLastEnabledCategory} from '@libs/OptionsListUtils';
+import {isDisablingAllCategories, isDisablingOrDeletingLastEnabledCategory} from '@libs/OptionsListUtils';
 import {getConnectedIntegration, getCurrentConnectionName, hasAccountingConnections, shouldShowSyncError} from '@libs/PolicyUtils';
 import StringUtils from '@libs/StringUtils';
 import AccessOrNotFoundWrapper from '@pages/workspace/AccessOrNotFoundWrapper';
@@ -72,6 +72,8 @@ function WorkspaceCategoriesPage({route}: WorkspaceCategoriesPageProps) {
     const [isDownloadFailureModalVisible, setIsDownloadFailureModalVisible] = useState(false);
     const [deleteCategoriesConfirmModalVisible, setDeleteCategoriesConfirmModalVisible] = useState(false);
     const [isCannotDeleteOrDisableLastCategoryModalVisible, setIsCannotDeleteOrDisableLastCategoryModalVisible] = useState(false);
+    const [disableAllCategoriesWarningModalVisible, setDisableAllCategoriesWarningModalVisible] = useState(false);
+    const [categoryToDisable, setCategoryToDisable] = useState<string | null>(null);
     const {environmentURL} = useEnvironment();
     const policyId = route.params.policyID;
     const backTo = route.params?.backTo;
@@ -171,6 +173,14 @@ function WorkspaceCategoriesPage({route}: WorkspaceCategoriesPageProps) {
                                 setIsCannotDeleteOrDisableLastCategoryModalVisible(true);
                                 return;
                             }
+
+                            // Check if disabling this category would disable all categories
+                            if (!newValue && isDisablingAllCategories(policyCategories, [value])) {
+                                setCategoryToDisable(value.name);
+                                setDisableAllCategoriesWarningModalVisible(true);
+                                return;
+                            }
+
                             updateWorkspaceCategoryEnabled(newValue, value.name);
                         }}
                         showLockIcon={isDisablingOrDeletingLastEnabledCategory(policy, policyCategories, [value])}
@@ -260,6 +270,36 @@ function WorkspaceCategoriesPage({route}: WorkspaceCategoriesPageProps) {
         InteractionManager.runAfterInteractions(() => {
             setSelectedCategories([]);
         });
+    };
+
+    const handleDisableAllCategories = () => {
+        let categoriesToDisable: Record<string, {name: string; enabled: boolean}>;
+        console.log('categoryToDisable', categoryToDisable);
+        if (categoryToDisable) {
+            // Individual category disable
+            categoriesToDisable = {
+                [categoryToDisable]: {
+                    name: categoryToDisable,
+                    enabled: false,
+                },
+            };
+            setCategoryToDisable(null);
+        } else {
+            // Bulk disable
+            categoriesToDisable = selectedCategories
+                .filter((categoryName) => policyCategories?.[categoryName]?.enabled)
+                .reduce<Record<string, {name: string; enabled: boolean}>>((acc, categoryName) => {
+                    acc[categoryName] = {
+                        name: categoryName,
+                        enabled: false,
+                    };
+                    return acc;
+                }, {});
+            setSelectedCategories([]);
+        }
+
+        setDisableAllCategoriesWarningModalVisible(false);
+        setWorkspaceCategoryEnabled(policyId, categoriesToDisable, policyTagLists, allTransactionViolations);
     };
     const hasVisibleCategories = categoryList.some((category) => category.pendingAction !== CONST.RED_BRICK_ROAD_PENDING_ACTION.DELETE || isOffline);
 
@@ -357,6 +397,12 @@ function WorkspaceCategoriesPage({route}: WorkspaceCategoriesPageProps) {
                             setIsCannotDeleteOrDisableLastCategoryModalVisible(true);
                             return;
                         }
+
+                        if (isDisablingAllCategories(policyCategories, selectedCategoriesObject)) {
+                            setDisableAllCategoriesWarningModalVisible(true);
+                            return;
+                        }
+
                         setSelectedCategories([]);
                         setWorkspaceCategoryEnabled(policyId, categoriesToDisable, policyTagLists, allTransactionViolations);
                     },
@@ -588,6 +634,16 @@ function WorkspaceCategoriesPage({route}: WorkspaceCategoriesPageProps) {
                     prompt={translate('workspace.categories.cannotDeleteOrDisableAllCategories.description')}
                     confirmText={translate('common.buttonConfirm')}
                     shouldShowCancelButton={false}
+                />
+                <ConfirmModal
+                    isVisible={disableAllCategoriesWarningModalVisible}
+                    onConfirm={handleDisableAllCategories}
+                    onCancel={() => setDisableAllCategoriesWarningModalVisible(false)}
+                    title={translate('workspace.categories.disableAllCategoriesWarning.title')}
+                    prompt={translate('workspace.categories.disableAllCategoriesWarning.description')}
+                    confirmText={translate('workspace.categories.disableAllCategoriesWarning.confirmButton')}
+                    cancelText={translate('workspace.categories.disableAllCategoriesWarning.cancelButton')}
+                    danger
                 />
                 <ConfirmModal
                     isVisible={isOfflineModalVisible}

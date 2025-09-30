@@ -1015,6 +1015,18 @@ function isDisablingOrDeletingLastEnabledCategory(
     return false;
 }
 
+function isDisablingAllCategories(policyCategories: PolicyCategories | undefined, selectedCategories: Array<PolicyCategory | undefined>): boolean {
+    const enabledCategoriesCount = getEnabledCategoriesCount(policyCategories);
+
+    if (!enabledCategoriesCount) {
+        return false;
+    }
+
+    // Check if we're disabling all enabled categories
+    const enabledSelectedCategories = selectedCategories.filter((selectedCategory) => selectedCategory?.enabled);
+    return enabledSelectedCategories.length === enabledCategoriesCount;
+}
+
 function isDisablingOrDeletingLastEnabledTag(policyTagList: PolicyTagLists[string] | undefined, selectedTags: Array<PolicyTag | undefined>): boolean {
     const enabledTagsCount = getCountOfEnabledTagsOfList(policyTagList?.tags);
 
@@ -2626,6 +2638,7 @@ export {
     getValidOptions,
     hasEnabledOptions,
     isCurrentUser,
+    isDisablingAllCategories,
     isDisablingOrDeletingLastEnabledCategory,
     isDisablingOrDeletingLastEnabledTag,
     isMakingLastRequiredTagListOptional,
