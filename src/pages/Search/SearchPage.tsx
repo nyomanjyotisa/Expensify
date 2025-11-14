@@ -8,6 +8,8 @@ import DecisionModal from '@components/DecisionModal';
 import DragAndDropConsumer from '@components/DragAndDrop/Consumer';
 import DragAndDropProvider from '@components/DragAndDrop/Provider';
 import DropZoneUI from '@components/DropZone/DropZoneUI';
+import HoldOrRejectEducationalModal from '@components/HoldOrRejectEducationalModal';
+import HoldSubmitterEducationalModal from '@components/HoldSubmitterEducationalModal';
 import * as Expensicons from '@components/Icon/Expensicons';
 import type {PaymentMethodType} from '@components/KYCWall/types';
 import type {PopoverMenuItem} from '@components/PopoverMenu';
@@ -56,6 +58,7 @@ import {
     unholdMoneyRequestOnSearch,
 } from '@libs/actions/Search';
 import {setTransactionReport} from '@libs/actions/Transaction';
+import {setNameValuePair} from '@libs/actions/User';
 import {navigateToParticipantPage} from '@libs/IOUUtils';
 import Navigation from '@libs/Navigation/Navigation';
 import type {PlatformStackScreenProps} from '@libs/Navigation/PlatformStackNavigation/types';
@@ -66,6 +69,7 @@ import {
     getPolicyExpenseChat,
     getReportOrDraftReport,
     isBusinessInvoiceRoom,
+    isCurrentUserSubmitter,
     isExpenseReport as isExpenseReportUtil,
     isInvoiceReport,
     isIOUReport as isIOUReportUtil,
@@ -74,7 +78,7 @@ import {buildCannedSearchQuery, buildSearchQueryJSON} from '@libs/SearchQueryUti
 import {shouldRestrictUserBillableActions} from '@libs/SubscriptionUtils';
 import type {ReceiptFile} from '@pages/iou/request/step/IOURequestStepScan/types';
 import variables from '@styles/variables';
-import {initMoneyRequest, setMoneyRequestParticipantsFromReport, setMoneyRequestReceipt} from '@userActions/IOU';
+import {dismissRejectUseExplanation, initMoneyRequest, setMoneyRequestParticipantsFromReport, setMoneyRequestReceipt} from '@userActions/IOU';
 import {openOldDotLink} from '@userActions/Link';
 import {buildOptimisticTransactionAndCreateDraft} from '@userActions/TransactionEdit';
 import CONST from '@src/CONST';
@@ -117,6 +121,13 @@ function SearchPage({route}: SearchPageProps) {
     const [isExportWithTemplateModalVisible, setIsExportWithTemplateModalVisible] = useState(false);
     const [searchRequestResponseStatusCode, setSearchRequestResponseStatusCode] = useState<number | null>(null);
     const [isDEWModalVisible, setIsDEWModalVisible] = useState(false);
+    const [isHoldEducationalModalVisible, setIsHoldEducationalModalVisible] = useState(false);
+    const [rejectModalAction, setRejectModalAction] = useState<ValueOf<
+        typeof CONST.REPORT.TRANSACTION_SECONDARY_ACTIONS.HOLD | typeof CONST.REPORT.TRANSACTION_SECONDARY_ACTIONS.REJECT
+    > | null>(null);
+    const [allTransactions] = useOnyx(ONYXKEYS.COLLECTION.TRANSACTION, {canBeMissing: true});
+    const [dismissedHoldUseExplanation] = useOnyx(ONYXKEYS.NVP_DISMISSED_HOLD_USE_EXPLANATION, {canBeMissing: true});
+    const [dismissedRejectUseExplanation] = useOnyx(ONYXKEYS.NVP_DISMISSED_REJECT_USE_EXPLANATION, {canBeMissing: true});
     const queryJSON = useMemo(() => buildSearchQueryJSON(route.params.q), [route.params.q]);
     const {saveScrollOffset} = useContext(ScrollOffsetContext);
     const activeAdminPolicies = getActiveAdminWorkspaces(policies, currentUserPersonalDetails?.accountID.toString()).sort((a, b) => localeCompare(a.name || '', b.name || ''));
@@ -296,6 +307,62 @@ function SearchPage({route}: SearchPageProps) {
         },
         [clearSelectedTransactions, hash, isOffline, lastPaymentMethods, selectedReports, selectedTransactions, policies, formatPhoneNumber],
     );
+
+    // Check if current user is submitter of reports containing selected transactions
+    const isReportSubmitter = useMemo(() => {
+        if (selectedTransactionsKeys.length === 0) {
+            return false;
+        }
+
+        const reportIDs = new Set<string>();
+        for (const transactionID of selectedTransactionsKeys) {
+            const transaction = allTransactions?.[`${ONYXKEYS.COLLECTION.TRANSACTION}${transactionID}`];
+            if (transaction?.reportID && transaction.reportID !== '-1') {
+                reportIDs.add(transaction.reportID);
+            }
+        }
+
+        if (reportIDs.size === 0) {
+            return false;
+        }
+
+        for (const reportIDToCheck of reportIDs) {
+            const reportToCheck = getReportOrDraftReport(reportIDToCheck);
+            if (!isCurrentUserSubmitter(reportToCheck)) {
+                return false;
+            }
+        }
+
+        return true;
+    }, [selectedTransactionsKeys, allTransactions]);
+
+    // Check if current user is NOT submitter (but can hold) for all selected transactions
+    const isReportNonSubmitter = useMemo(() => {
+        if (selectedTransactionsKeys.length === 0 || isReportSubmitter) {
+            return false;
+        }
+
+        const reportIDs = new Set<string>();
+        for (const transactionID of selectedTransactionsKeys) {
+            const transaction = allTransactions?.[`${ONYXKEYS.COLLECTION.TRANSACTION}${transactionID}`];
+            if (transaction?.reportID && transaction.reportID !== '-1') {
+                reportIDs.add(transaction.reportID);
+            }
+        }
+
+        if (reportIDs.size === 0) {
+            return false;
+        }
+
+        for (const reportIDToCheck of reportIDs) {
+            const reportToCheck = getReportOrDraftReport(reportIDToCheck);
+            if (isCurrentUserSubmitter(reportToCheck)) {
+                return false;
+            }
+        }
+
+        return true;
+    }, [selectedTransactionsKeys, allTransactions, isReportSubmitter]);
 
     const headerButtonsOptions = useMemo(() => {
         if (selectedTransactionsKeys.length === 0 || status == null || !hash) {
@@ -514,7 +581,17 @@ function SearchPage({route}: SearchPageProps) {
                         return;
                     }
 
-                    Navigation.navigate(ROUTES.TRANSACTION_HOLD_REASON_RHP);
+                    const isDismissed = isReportSubmitter ? dismissedHoldUseExplanation : dismissedRejectUseExplanation;
+
+                    if (isDismissed) {
+                        Navigation.navigate(ROUTES.TRANSACTION_HOLD_REASON_RHP);
+                    } else if (isReportSubmitter) {
+                        setIsHoldEducationalModalVisible(true);
+                    } else if (isReportNonSubmitter) {
+                        setRejectModalAction(CONST.REPORT.TRANSACTION_SECONDARY_ACTIONS.HOLD);
+                    } else {
+                        Navigation.navigate(ROUTES.TRANSACTION_HOLD_REASON_RHP);
+                    }
                 },
             });
         }
@@ -641,7 +718,25 @@ function SearchPage({route}: SearchPageProps) {
         selectedReportIDs,
         selectedTransactionReportIDs,
         isBetaBulkPayEnabled,
+        isReportSubmitter,
+        isReportNonSubmitter,
+        dismissedHoldUseExplanation,
+        dismissedRejectUseExplanation,
     ]);
+
+    const dismissModalAndUpdateUseHold = useCallback(() => {
+        setIsHoldEducationalModalVisible(false);
+        setNameValuePair(ONYXKEYS.NVP_DISMISSED_HOLD_USE_EXPLANATION, true, false, !isOffline);
+        Navigation.navigate(ROUTES.TRANSACTION_HOLD_REASON_RHP);
+    }, [isOffline]);
+
+    const dismissRejectModalBasedOnAction = useCallback(() => {
+        if (rejectModalAction === CONST.REPORT.TRANSACTION_SECONDARY_ACTIONS.HOLD) {
+            dismissRejectUseExplanation();
+            setRejectModalAction(null);
+            Navigation.navigate(ROUTES.TRANSACTION_HOLD_REASON_RHP);
+        }
+    }, [rejectModalAction]);
 
     const handleDeleteExpenses = () => {
         if (selectedTransactionsKeys.length === 0 || !hash) {
@@ -1053,6 +1148,18 @@ function SearchPage({route}: SearchPageProps) {
                     confirmText={translate('customApprovalWorkflow.goToExpensifyClassic')}
                     shouldShowCancelButton={false}
                 />
+                {!!rejectModalAction && (
+                    <HoldOrRejectEducationalModal
+                        onClose={dismissRejectModalBasedOnAction}
+                        onConfirm={dismissRejectModalBasedOnAction}
+                    />
+                )}
+                {isHoldEducationalModalVisible && (
+                    <HoldSubmitterEducationalModal
+                        onClose={dismissModalAndUpdateUseHold}
+                        onConfirm={dismissModalAndUpdateUseHold}
+                    />
+                )}
             </FullPageNotFoundView>
         </ScreenWrapper>
     );
