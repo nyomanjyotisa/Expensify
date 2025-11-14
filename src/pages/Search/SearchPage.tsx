@@ -74,6 +74,7 @@ import {
     isInvoiceReport,
     isIOUReport as isIOUReportUtil,
 } from '@libs/ReportUtils';
+import {isValidReportIDFromPath} from '@libs/ReportUtils';
 import {buildCannedSearchQuery, buildSearchQueryJSON} from '@libs/SearchQueryUtils';
 import {shouldRestrictUserBillableActions} from '@libs/SubscriptionUtils';
 import type {ReceiptFile} from '@pages/iou/request/step/IOURequestStepScan/types';
@@ -317,7 +318,7 @@ function SearchPage({route}: SearchPageProps) {
         const reportIDs = new Set<string>();
         for (const transactionID of selectedTransactionsKeys) {
             const transaction = allTransactions?.[`${ONYXKEYS.COLLECTION.TRANSACTION}${transactionID}`];
-            if (transaction?.reportID && transaction.reportID !== '-1') {
+            if (transaction?.reportID && isValidReportIDFromPath(transaction.reportID)) {
                 reportIDs.add(transaction.reportID);
             }
         }
@@ -345,7 +346,7 @@ function SearchPage({route}: SearchPageProps) {
         const reportIDs = new Set<string>();
         for (const transactionID of selectedTransactionsKeys) {
             const transaction = allTransactions?.[`${ONYXKEYS.COLLECTION.TRANSACTION}${transactionID}`];
-            if (transaction?.reportID && transaction.reportID !== '-1') {
+            if (transaction?.reportID && isValidReportIDFromPath(transaction.reportID)) {
                 reportIDs.add(transaction.reportID);
             }
         }
@@ -587,10 +588,8 @@ function SearchPage({route}: SearchPageProps) {
                         Navigation.navigate(ROUTES.TRANSACTION_HOLD_REASON_RHP);
                     } else if (isReportSubmitter) {
                         setIsHoldEducationalModalVisible(true);
-                    } else if (isReportNonSubmitter) {
-                        setRejectModalAction(CONST.REPORT.TRANSACTION_SECONDARY_ACTIONS.HOLD);
                     } else {
-                        Navigation.navigate(ROUTES.TRANSACTION_HOLD_REASON_RHP);
+                        setRejectModalAction(CONST.REPORT.TRANSACTION_SECONDARY_ACTIONS.HOLD);
                     }
                 },
             });
