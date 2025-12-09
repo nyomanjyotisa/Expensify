@@ -1,4 +1,5 @@
-import React, {useEffect, useState} from 'react';
+import {useIsFocused} from '@react-navigation/native';
+import React, {useEffect, useMemo, useState} from 'react';
 import {View} from 'react-native';
 import ActivityIndicator from '@components/ActivityIndicator';
 import Button from '@components/Button';
@@ -15,12 +16,14 @@ import Text from '@components/Text';
 import {useMemoizedLazyAsset, useMemoizedLazyExpensifyIcons} from '@hooks/useLazyAsset';
 import useLocalize from '@hooks/useLocalize';
 import useOnyx from '@hooks/useOnyx';
+import useNetwork from '@hooks/useNetwork';
 import useResponsiveLayout from '@hooks/useResponsiveLayout';
 import useThemeStyles from '@hooks/useThemeStyles';
 import {READ_COMMANDS} from '@libs/API/types';
 import Clipboard from '@libs/Clipboard';
 import localFileDownload from '@libs/localFileDownload';
 import Navigation from '@libs/Navigation/Navigation';
+import {isPolicyFeatureEnabled as isPolicyFeatureEnabledUtil} from '@libs/PolicyUtils';
 import {toggleTwoFactorAuth} from '@userActions/Session';
 import {quitAndNavigateBack, setCodesAreCopied} from '@userActions/TwoFactorAuthActions';
 import CONST from '@src/CONST';
@@ -34,12 +37,25 @@ function CopyCodesPage({route}: TwoFactorAuthPageProps) {
     const icons = useMemoizedLazyExpensifyIcons(['Download'] as const);
     const styles = useThemeStyles();
     const {translate} = useLocalize();
+    const {isOffline} = useNetwork();
+    const isFocused = useIsFocused();
     // We need to use isSmallScreenWidth instead of shouldUseNarrowLayout to use correct style
     // eslint-disable-next-line rulesdir/prefer-shouldUseNarrowLayout-instead-of-isSmallScreenWidth
     const {isExtraSmallScreenWidth, isSmallScreenWidth} = useResponsiveLayout();
     const [error, setError] = useState('');
 
     const [account, accountMetadata] = useOnyx(ONYXKEYS.ACCOUNT, {canBeMissing: true});
+    const policyID = useMemo(() => {
+        const routeParam = route.params?.backTo ?? route.params?.forwardTo ?? '';
+        const policyIDMatch = routeParam.match(/workspaces\/([^/]+)/);
+        return policyIDMatch?.[1];
+    }, [route.params?.backTo, route.params?.forwardTo]);
+    const [policy] = useOnyx(`${ONYXKEYS.COLLECTION.POLICY}${policyID}`, {canBeMissing: true});
+    const pendingField = policy ? policy?.pendingFields?.[CONST.POLICY.MORE_FEATURES.ARE_CONNECTIONS_ENABLED] : undefined;
+    const isFeatureEnabled = useMemo(
+        () => (policy ? isPolicyFeatureEnabledUtil(policy, CONST.POLICY.MORE_FEATURES.ARE_CONNECTIONS_ENABLED) : true),
+        [policy],
+    );
 
     const isUserValidated = account?.validated ?? false;
     const {asset: ShieldYellow} = useMemoizedLazyAsset(() => loadIllustration('ShieldYellow' as IllustrationName));
@@ -56,6 +72,14 @@ function CopyCodesPage({route}: TwoFactorAuthPageProps) {
         toggleTwoFactorAuth(true);
         // eslint-disable-next-line react-compiler/react-compiler, react-hooks/exhaustive-deps -- We want to run this when component mounts
     }, [isUserValidated, accountMetadata.status]);
+
+    useEffect(() => {
+        if (!policyID || !isFocused || isFeatureEnabled || (pendingField && !isOffline && !isFeatureEnabled)) {
+            return;
+        }
+        Navigation.isNavigationReady().then(() => Navigation.goBack(ROUTES.WORKSPACE_MORE_FEATURES.getRoute(policyID)));
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [policyID, isFocused, isFeatureEnabled, pendingField, isOffline]);
 
     return (
         <TwoFactorAuthWrapper

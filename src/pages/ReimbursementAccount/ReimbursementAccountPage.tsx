@@ -25,7 +25,7 @@ import {isCurrencySupportedForECards} from '@libs/CardUtils';
 import Navigation from '@libs/Navigation/Navigation';
 import type {PlatformStackScreenProps} from '@libs/Navigation/PlatformStackNavigation/types';
 import type {ReimbursementAccountNavigatorParamList} from '@libs/Navigation/types';
-import {goBackFromInvalidPolicy, isPendingDeletePolicy, isPolicyAdmin} from '@libs/PolicyUtils';
+import {goBackFromInvalidPolicy, isPendingDeletePolicy, isPolicyAdmin, isPolicyFeatureEnabled as isPolicyFeatureEnabledUtil} from '@libs/PolicyUtils';
 import {getRouteForCurrentStep, hasInProgressUSDVBBA, hasInProgressVBBA} from '@libs/ReimbursementAccountUtils';
 import shouldReopenOnfido from '@libs/shouldReopenOnfido';
 import {isFullScreenName} from '@navigation/helpers/isNavigatorName';
@@ -152,6 +152,25 @@ function ReimbursementAccountPage({route, policy, isLoadingPolicy, navigation}: 
     const [hasACHDataBeenLoaded, setHasACHDataBeenLoaded] = useState(reimbursementAccount !== CONST.REIMBURSEMENT_ACCOUNT.DEFAULT_DATA && isPreviousPolicy);
     const [shouldShowContinueSetupButton, setShouldShowContinueSetupButton] = useState<boolean>(shouldShowContinueSetupButtonValue);
     const [shouldShowConnectedVerifiedBankAccount, setShouldShowConnectedVerifiedBankAccount] = useState<boolean>(false);
+    const featureToggleName = useMemo(() => {
+        if (!backTo) {
+            return null;
+        }
+        if (backTo.includes('/invoices')) {
+            return CONST.POLICY.MORE_FEATURES.ARE_INVOICES_ENABLED;
+        }
+        return null;
+    }, [backTo]);
+    const pendingField = featureToggleName ? policy?.pendingFields?.[featureToggleName] : undefined;
+    const isFeatureEnabled = featureToggleName ? isPolicyFeatureEnabledUtil(policy, featureToggleName) : true;
+
+    useEffect(() => {
+        if (!featureToggleName || !isFocused || isFeatureEnabled || (pendingField && !isOffline && !isFeatureEnabled) || !policyIDParam) {
+            return;
+        }
+        Navigation.isNavigationReady().then(() => Navigation.goBack(ROUTES.WORKSPACE_MORE_FEATURES.getRoute(policyIDParam)));
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [featureToggleName, isFocused, isFeatureEnabled, pendingField, isOffline, policyIDParam]);
 
     /**
      * Retrieve verified business bank account currently being set up.
