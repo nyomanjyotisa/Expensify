@@ -10,8 +10,9 @@ import SettlementButton from '@components/SettlementButton';
 import useLocalize from '@hooks/useLocalize';
 import useResponsiveLayout from '@hooks/useResponsiveLayout';
 import useThemeStyles from '@hooks/useThemeStyles';
-import {convertToDisplayString, convertToFrontendAmountAsInteger, convertToFrontendAmountAsString} from '@libs/CurrencyUtils';
+import {convertToDisplayString, convertToFrontendAmountAsInteger, convertToFrontendAmountAsString, getCurrencyDecimals, getCurrencyMaxLength} from '@libs/CurrencyUtils';
 import {canUseTouchScreen as canUseTouchScreenUtil} from '@libs/DeviceCapabilities';
+import {validateAmount} from '@libs/MoneyRequestUtils';
 import Navigation from '@libs/Navigation/Navigation';
 import variables from '@styles/variables';
 import type {BaseTextInputRef} from '@src/components/TextInput/BaseTextInput/types';
@@ -148,6 +149,15 @@ function MoneyRequestAmountForm({
                 return;
             }
 
+            // Validate amount length against currency max length
+            const currencyDecimals = getCurrencyDecimals(currency);
+            const currencyMaxLength = getCurrencyMaxLength(currency);
+            const amountToValidate = isNegative ? `-${currentAmount}` : currentAmount;
+            if (!validateAmount(amountToValidate, currencyDecimals, currencyMaxLength, allowFlippingAmount)) {
+                setFormError(translate('iou.error.invalidAmount'));
+                return;
+            }
+
             if (isTaxAmountInvalid(currentAmount, taxAmount, isTaxAmountForm, currency)) {
                 setFormError(translate('iou.error.invalidTaxAmount', {amount: formattedTaxAmount}));
                 return;
@@ -157,7 +167,7 @@ function MoneyRequestAmountForm({
 
             onSubmitButtonPress({amount: newAmount, currency, paymentMethod: iouPaymentType});
         },
-        [taxAmount, currency, isNegative, onSubmitButtonPress, translate, formattedTaxAmount],
+        [taxAmount, currency, isNegative, onSubmitButtonPress, translate, formattedTaxAmount, allowFlippingAmount],
     );
 
     const buttonText: string = useMemo(() => {
@@ -250,6 +260,7 @@ function MoneyRequestAmountForm({
                     setFormError('');
                 }}
                 shouldShowBigNumberPad={canUseTouchScreen}
+                maxLength={getCurrencyMaxLength(currency)}
                 ref={(newRef) => {
                     if (typeof ref === 'function') {
                         ref(newRef);

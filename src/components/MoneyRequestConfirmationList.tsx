@@ -31,7 +31,7 @@ import {
     setSplitShares,
 } from '@libs/actions/IOU';
 import {isCategoryDescriptionRequired} from '@libs/CategoryUtils';
-import {convertToBackendAmount, convertToDisplayString, convertToDisplayStringWithoutCurrency, getCurrencyDecimals} from '@libs/CurrencyUtils';
+import {convertToBackendAmount, convertToDisplayString, convertToDisplayStringWithoutCurrency, getCurrencyDecimals, getCurrencyMaxLength} from '@libs/CurrencyUtils';
 import DistanceRequestUtils from '@libs/DistanceRequestUtils';
 import {calculateAmount, insertTagIntoTransactionTagsString, isMovingTransactionFromTrackExpense as isMovingTransactionFromTrackExpenseUtil} from '@libs/IOUUtils';
 import Log from '@libs/Log';
@@ -678,7 +678,7 @@ function MoneyRequestConfirmationList({
                     touchableInputWrapperStyle={[styles.ml3]}
                     onFormatAmount={convertToDisplayStringWithoutCurrency}
                     onAmountChange={(value: string) => onSplitShareChange(participantOption.accountID ?? CONST.DEFAULT_NUMBER_ID, Number(value))}
-                    maxLength={formattedTotalAmount.length + 1}
+                    maxLength={Math.max(formattedTotalAmount.length + 1, getCurrencyMaxLength(iouCurrencyCode))}
                     contentWidth={(formattedTotalAmount.length + 1) * CONST.CHARACTER_WIDTH}
                     shouldApplyPaddingToContainer
                     shouldUseDefaultLineHeightForPrefix={false}

@@ -3,6 +3,7 @@ import type {BlurEvent} from 'react-native';
 import MoneyRequestAmountInput from '@components/MoneyRequestAmountInput';
 import type {SplitListItemType} from '@components/SelectionListWithSections/types';
 import type {BaseTextInputRef} from '@components/TextInput/BaseTextInput/types';
+import {getCurrencyMaxLength} from '@libs/CurrencyUtils';
 import useThemeStyles from '@hooks/useThemeStyles';
 import SplitAmountDisplay from './SplitAmountDisplay';
 
@@ -47,7 +48,7 @@ function SplitAmountInput({splitItem, formattedOriginalAmount, contentWidth, onS
                 inputStyle={[styles.optionRowAmountInput, styles.lineHeightUndefined]}
                 containerStyle={[styles.textInputContainer, styles.pl2, styles.pr1]}
                 touchableInputWrapperStyle={[styles.ml3]}
-                maxLength={formattedOriginalAmount.length + 1}
+                maxLength={Math.max(formattedOriginalAmount.length + 1, getCurrencyMaxLength(splitItem.currency))}
                 contentWidth={contentWidth}
                 shouldApplyPaddingToContainer
                 shouldUseDefaultLineHeightForPrefix={false}

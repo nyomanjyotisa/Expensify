@@ -32,6 +32,19 @@ function getCurrencyDecimals(currency: string = CONST.CURRENCY.USD): number {
 }
 
 /**
+ * Returns the maximum number of digits allowed for a specific currency.
+ * Some currencies like VND have higher values and need more digits.
+ *
+ * @param currency - IOU currency
+ */
+function getCurrencyMaxLength(currency: string = CONST.CURRENCY.USD): number {
+    if (currency === 'VND') {
+        return 9;
+    }
+    return CONST.IOU.AMOUNT_MAX_LENGTH;
+}
+
+/**
  * Returns the currency's minor unit quantity
  * e.g. Cent in USD
  *
@@ -218,6 +231,7 @@ function getCurrencyKeyByCountryCode(currencies?: CurrencyList, countryCode?: st
 
 export {
     getCurrencyDecimals,
+    getCurrencyMaxLength,
     getCurrencyUnit,
     getLocalizedCurrencySymbol,
     getCurrencySymbol,

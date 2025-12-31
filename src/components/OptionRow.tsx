@@ -7,6 +7,7 @@ import useLocalize from '@hooks/useLocalize';
 import useStyleUtils from '@hooks/useStyleUtils';
 import useTheme from '@hooks/useTheme';
 import useThemeStyles from '@hooks/useThemeStyles';
+import {getCurrencyMaxLength} from '@libs/CurrencyUtils';
 import {shouldOptionShowTooltip} from '@libs/OptionsListUtils';
 import {getDisplayNamesWithTooltips} from '@libs/ReportUtils';
 import type {OptionData} from '@libs/ReportUtils';
@@ -268,6 +269,7 @@ function OptionRow({
                                         hideFocusedState={false}
                                         hideCurrencySymbol
                                         formatAmountOnBlur
+                                        maxLength={getCurrencyMaxLength(option.amountInputProps.currency)}
                                         prefixContainerStyle={[styles.pv0]}
                                         containerStyle={[styles.textInputContainer]}
                                         inputStyle={[

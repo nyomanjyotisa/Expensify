@@ -207,6 +207,7 @@ function MoneyRequestAmountInput({
         <NumberWithSymbolForm
             value={onFormatAmount(amount, currency)}
             decimals={decimals}
+            maxLength={maxLength}
             onSymbolButtonPress={onCurrencyButtonPress}
             onInputChange={onAmountChange}
             onBlur={inputOnBlur}
