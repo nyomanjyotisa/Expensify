@@ -1021,7 +1021,21 @@ function deactivateCard(workspaceAccountID: number, card?: Card) {
         cardID,
     };
 
-    API.write(WRITE_COMMANDS.CARD_DEACTIVATE, parameters, {optimisticData, failureData});
+    // eslint-disable-next-line rulesdir/no-api-side-effects-method
+    API.makeRequestWithSideEffects(SIDE_EFFECT_REQUEST_COMMANDS.CARD_DEACTIVATE, parameters, {optimisticData, failureData}).then((response) => {
+        if (!response || response.jsonCode === 200 || !response.message) {
+            return;
+        }
+        const errors = response.message.includes('Card not found')
+            ? ErrorUtils.getMicroSecondTranslationErrorWithTranslationKey('workspace.card.deactivateErrorCardNotFound')
+            : ErrorUtils.getMicroSecondOnyxErrorWithMessage(response.message);
+        const errorData = {...card, errors} as Card;
+        // Clear existing errors from failureData, then apply the specific error
+        Onyx.merge(ONYXKEYS.CARD_LIST, {[cardID]: {errors: null}});
+        Onyx.merge(ONYXKEYS.CARD_LIST, {[cardID]: errorData});
+        Onyx.merge(`${ONYXKEYS.COLLECTION.WORKSPACE_CARDS_LIST}${workspaceAccountID}_${CONST.EXPENSIFY_CARD.BANK}`, {[cardID]: {errors: null}});
+        Onyx.merge(`${ONYXKEYS.COLLECTION.WORKSPACE_CARDS_LIST}${workspaceAccountID}_${CONST.EXPENSIFY_CARD.BANK}`, {[cardID]: errorData});
+    });
 }
 
 type DeletePersonalCardData = {

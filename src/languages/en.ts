@@ -5606,6 +5606,7 @@ const translations = {
                 deactivateCard: 'Deactivate card',
                 deactivateConfirmation: 'Deactivating this card will decline all future transactions and can’t be undone.',
             },
+            deactivateErrorCardNotFound: 'This card can no longer be deactivated because it was not found. Please chat with Concierge for further assistance.',
         },
         accounting: {
             settings: 'settings',
