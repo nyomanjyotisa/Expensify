@@ -18,7 +18,7 @@ import usePolicy from '@hooks/usePolicy';
 import usePolicyForMovingExpenses from '@hooks/usePolicyForMovingExpenses';
 import useReportTransactions from '@hooks/useReportTransactions';
 import Navigation from '@libs/Navigation/Navigation';
-import {isPolicyAdmin} from '@libs/PolicyUtils';
+import {isPolicyAdmin, isTimeTrackingEnabled} from '@libs/PolicyUtils';
 import {
     canAddTransaction,
     getPolicyName,
@@ -29,7 +29,7 @@ import {
     isReportOwner,
     sortOutstandingReportsBySelected,
 } from '@libs/ReportUtils';
-import {isPerDiemRequest as isPerDiemRequestUtil} from '@libs/TransactionUtils';
+import {isPerDiemRequest as isPerDiemRequestUtil, isTimeRequest as isTimeRequestUtil} from '@libs/TransactionUtils';
 import CONST from '@src/CONST';
 import ONYXKEYS from '@src/ONYXKEYS';
 import type {Route} from '@src/ROUTES';
@@ -55,6 +55,7 @@ type Props = {
     shouldShowNotFoundPage?: boolean;
     createReport?: () => void;
     isPerDiemRequest: boolean;
+    isTimeRequest?: boolean;
 };
 
 function IOURequestEditReportCommon({
@@ -70,6 +71,7 @@ function IOURequestEditReportCommon({
     shouldShowNotFoundPage: shouldShowNotFoundPageFromProps,
     createReport,
     isPerDiemRequest,
+    isTimeRequest = false,
 }: Props) {
     const icons = useMemoizedLazyExpensifyIcons(['Document']);
     const {translate, localeCompare} = useLocalize();
@@ -137,6 +139,10 @@ function IOURequestEditReportCommon({
                     return false;
                 }
 
+                if (isTimeRequest && !isTimeTrackingEnabled(policy)) {
+                    return false;
+                }
+
                 if (canAddTransaction(report, undefined, true)) {
                     return true;
                 }
@@ -161,7 +167,7 @@ function IOURequestEditReportCommon({
                     policyID: matchingOption?.policyID ?? report.policyID,
                 };
             });
-    }, [debouncedSearchValue, outstandingReports, selectedReportID, options.reports, localeCompare, allPolicies, currentUserPersonalDetails.accountID]);
+    }, [debouncedSearchValue, outstandingReports, selectedReportID, options.reports, localeCompare, allPolicies, currentUserPersonalDetails.accountID, isTimeRequest]);
 
     const navigateBack = () => {
         Navigation.goBack(backTo);

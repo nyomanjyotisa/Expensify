@@ -32,6 +32,7 @@ import {
     getSubmitToAccountID,
     hasDynamicExternalWorkflow,
     isCurrentUserMemberOfAnyPolicy,
+    isTimeTrackingEnabled,
 } from '@libs/PolicyUtils';
 import {
     getActionableMentionWhisperMessage,
@@ -2041,6 +2042,11 @@ function isValidReport(option: SearchOption<Report>, policy: OnyxEntry<Policy>, 
             return false;
         }
     }
+
+    if (config.isTimeRequest && isPolicyExpenseChat && !isTimeTrackingEnabled(policy)) {
+        return false;
+    }
+
     return true;
 }
 

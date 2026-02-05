@@ -40,6 +40,7 @@ import {getActiveAdminWorkspaces, isPaidGroupPolicy as isPaidGroupPolicyUtil} fr
 import type {OptionData} from '@libs/ReportUtils';
 import {isInvoiceRoom} from '@libs/ReportUtils';
 import {shouldRestrictUserBillableActions} from '@libs/SubscriptionUtils';
+import {isTimeRequest as isTimeRequestUtil} from '@libs/TransactionUtils';
 import {getInvoicePrimaryWorkspace} from '@userActions/Policy/Policy';
 import {searchInServer} from '@userActions/Report';
 import type {IOUAction, IOUType} from '@src/CONST';
@@ -144,6 +145,13 @@ function MoneyRequestParticipantsSelector({
     const hasMultipleTransactions = (optimisticTransactions ?? []).length > 1;
     const canShowManagerMcTest = useMemo(() => !hasBeenAddedToNudgeMigration && action !== CONST.IOU.ACTION.SUBMIT, [hasBeenAddedToNudgeMigration, action]) && !hasMultipleTransactions;
 
+    const isTimeRequest = useMemo(() => {
+        if (!optimisticTransactions || optimisticTransactions.length === 0) {
+            return false;
+        }
+        return optimisticTransactions.some((transaction) => isTimeRequestUtil(transaction));
+    }, [optimisticTransactions]);
+
     /**
      * Adds a single participant to the expense
      *
@@ -179,7 +187,7 @@ function MoneyRequestParticipantsSelector({
             excludeLogins: CONST.EXPENSIFY_EMAILS_OBJECT,
             includeOwnedWorkspaceChats: iouType === CONST.IOU.TYPE.SUBMIT || iouType === CONST.IOU.TYPE.CREATE || iouType === CONST.IOU.TYPE.SPLIT || iouType === CONST.IOU.TYPE.TRACK,
             excludeNonAdminWorkspaces: action === CONST.IOU.ACTION.SHARE,
-            includeP2P: !isCategorizeOrShareAction && !isPerDiemRequest && !isCorporateCardTransaction,
+            includeP2P: !isCategorizeOrShareAction && !isPerDiemRequest && !isCorporateCardTransaction && !isTimeRequest,
             includeInvoiceRooms: iouType === CONST.IOU.TYPE.INVOICE,
             action,
             shouldSeparateSelfDMChat: iouType !== CONST.IOU.TYPE.INVOICE,
@@ -187,6 +195,7 @@ function MoneyRequestParticipantsSelector({
             includeSelfDM: !isMovingTransactionFromTrackExpense(action) && iouType !== CONST.IOU.TYPE.INVOICE,
             canShowManagerMcTest,
             isPerDiemRequest,
+            isTimeRequest,
             showRBR: false,
             preferPolicyExpenseChat: isPaidGroupPolicy,
             preferRecentExpenseReports: action === CONST.IOU.ACTION.CREATE,
@@ -204,6 +213,7 @@ function MoneyRequestParticipantsSelector({
             isPaidGroupPolicy,
             isRestrictedToPreferredPolicy,
             preferredPolicyID,
+            isTimeRequest,
         ],
     );
 

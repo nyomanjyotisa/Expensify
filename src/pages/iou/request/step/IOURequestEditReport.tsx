@@ -14,6 +14,7 @@ import setNavigationActionToMicrotaskQueue from '@libs/Navigation/helpers/setNav
 import Navigation from '@libs/Navigation/Navigation';
 import {getPersonalDetailsForAccountID, hasViolations as hasViolationsReportUtils} from '@libs/ReportUtils';
 import {shouldRestrictUserBillableActions} from '@libs/SubscriptionUtils';
+import {isTimeRequest} from '@libs/TransactionUtils';
 import {createNewReport} from '@userActions/Report';
 import CONST from '@src/CONST';
 import ONYXKEYS from '@src/ONYXKEYS';
@@ -85,6 +86,13 @@ function IOURequestEditReport({route}: IOURequestEditReportProps) {
         Navigation.dismissToSuperWideRHP();
     };
 
+    const hasTimeTransactions = useMemo(() => {
+        return selectedTransactionIDs.some((transactionID) => {
+            const transaction = allTransactions?.[`${ONYXKEYS.COLLECTION.TRANSACTION}${transactionID}`];
+            return transaction && isTimeRequest(transaction);
+        });
+    }, [selectedTransactionIDs, allTransactions]);
+
     const removeFromReport = () => {
         if (!selectedReport || selectedTransactionIDs.length === 0) {
             return;
@@ -151,6 +159,7 @@ function IOURequestEditReport({route}: IOURequestEditReportProps) {
                 isEditing={action === CONST.IOU.ACTION.EDIT}
                 createReport={createReport}
                 isPerDiemRequest={hasPerDiemTransactions}
+                isTimeRequest={hasTimeTransactions}
             />
         </>
     );

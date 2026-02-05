@@ -19,7 +19,7 @@ import {getPerDiemCustomUnit, getPolicyByCustomUnitID} from '@libs/PolicyUtils';
 import {getOriginalMessage, isMoneyRequestAction} from '@libs/ReportActionsUtils';
 import {getPersonalDetailsForAccountID, getReportOrDraftReport, hasViolations as hasViolationsReportUtils, isPolicyExpenseChat, isReportOutstanding} from '@libs/ReportUtils';
 import {shouldRestrictUserBillableActions} from '@libs/SubscriptionUtils';
-import {isPerDiemRequest} from '@libs/TransactionUtils';
+import {isPerDiemRequest, isTimeRequest} from '@libs/TransactionUtils';
 import CONST from '@src/CONST';
 import ONYXKEYS from '@src/ONYXKEYS';
 import ROUTES from '@src/ROUTES';
@@ -276,6 +276,7 @@ function IOURequestStepReport({route, transaction}: IOURequestStepReportProps) {
                 isUnreported={isUnreported}
                 shouldShowNotFoundPage={shouldShowNotFoundPage}
                 isPerDiemRequest={transaction ? isPerDiemRequest(transaction) : false}
+                isTimeRequest={transaction ? isTimeRequest(transaction) : false}
                 createReport={action === CONST.IOU.ACTION.EDIT && (policyForMovingExpensesID || shouldSelectPolicy || isPerDiemTransaction) ? createReport : undefined}
                 targetOwnerAccountID={ownerAccountID}
             />
