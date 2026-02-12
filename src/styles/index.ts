@@ -5197,6 +5197,18 @@ const staticStyles = (theme: ThemeColors) =>
             ...flex.justifyContentCenter,
         },
 
+        emptyStateCompanyCardsIllustrationContainer: {
+            width: '100%',
+            aspectRatio: 680 / 220,
+            ...flex.alignItemsCenter,
+            ...flex.justifyContentCenter,
+        },
+
+        emptyStateCompanyCardsIllustration: {
+            width: '100%',
+            height: '100%',
+        },
+
         emptyStateSamlIllustration: {
             width: 218,
             height: 190,
