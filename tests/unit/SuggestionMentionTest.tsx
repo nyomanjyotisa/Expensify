@@ -178,8 +178,8 @@ describe('SuggestionMention', () => {
 
         act(() => onSelect(0));
 
-        expect(updateComment).toHaveBeenCalledWith('@adam@example.com.', true);
-        expect(setSelection).toHaveBeenCalledWith({start: 18, end: 18});
+        expect(updateComment).toHaveBeenCalledWith('@adam@example.com. ', true);
+        expect(setSelection).toHaveBeenCalledWith({start: 19, end: 19});
     });
 
     it('does not append an extra trailing dot when selected mention already matches dotted prefix', async () => {
@@ -199,7 +199,7 @@ describe('SuggestionMention', () => {
 
         act(() => onSelect(0));
 
-        expect(updateComment).toHaveBeenCalledWith('@a.smith@example.com', true);
+        expect(updateComment).toHaveBeenCalledWith('@a.smith@example.com ', true);
         expect(setSelection).toHaveBeenCalledWith({start: 21, end: 21});
     });
 });
