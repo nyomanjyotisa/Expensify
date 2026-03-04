@@ -9,8 +9,6 @@ import ConfirmModal from '@components/ConfirmModal';
 import DecisionModal from '@components/DecisionModal';
 import EmptyStateComponent from '@components/EmptyStateComponent';
 import HeaderWithBackButton from '@components/HeaderWithBackButton';
-// eslint-disable-next-line no-restricted-imports
-import * as Expensicons from '@components/Icon/Expensicons';
 import ImportedFromAccountingSoftware from '@components/ImportedFromAccountingSoftware';
 import LottieAnimations from '@components/LottieAnimations';
 import RenderHTML from '@components/RenderHTML';
@@ -95,7 +93,7 @@ function WorkspaceCategoriesPage({route}: WorkspaceCategoriesPageProps) {
     const canSelectMultiple = isSmallScreenWidth ? isMobileSelectionModeEnabled : true;
     const isControlPolicyWithWideLayout = !shouldUseNarrowLayout && isControlPolicy(policy);
     const shouldShowApproverColumn = isControlPolicyWithWideLayout && !!policy?.areRulesEnabled;
-    const icons = useMemoizedLazyExpensifyIcons(['Download', 'Gear', 'Table']);
+    const icons = useMemoizedLazyExpensifyIcons(['Checkmark', 'Close', 'Download', 'Gear', 'Plus', 'Table', 'Trashcan'] as const);
     const illustrations = useMemoizedLazyIllustrations(['FolderOpen']);
 
     const {
@@ -494,7 +492,7 @@ function WorkspaceCategoriesPage({route}: WorkspaceCategoriesPageProps) {
         if (isSmallScreenWidth ? canSelectMultiple : selectedCategories.length > 0) {
             if (!isThereAnyAccountingConnection) {
                 options.push({
-                    icon: Expensicons.Trashcan,
+                    icon: icons.Trashcan,
                     text: translate(selectedCategories.length === 1 ? 'workspace.categories.deleteCategory' : 'workspace.categories.deleteCategories'),
                     value: CONST.POLICY.BULK_ACTION_TYPES.DELETE,
                     onSelected: () => {
@@ -520,7 +518,7 @@ function WorkspaceCategoriesPage({route}: WorkspaceCategoriesPageProps) {
                         return acc;
                     }, {});
                 options.push({
-                    icon: Expensicons.Close,
+                    icon: icons.Close,
                     text: translate(enabledCategories.length === 1 ? 'workspace.categories.disableCategory' : 'workspace.categories.disableCategories'),
                     value: CONST.POLICY.BULK_ACTION_TYPES.DISABLE,
                     onSelected: () => {
@@ -561,7 +559,7 @@ function WorkspaceCategoriesPage({route}: WorkspaceCategoriesPageProps) {
                         return acc;
                     }, {});
                 options.push({
-                    icon: Expensicons.Checkmark,
+                    icon: icons.Checkmark,
                     text: translate(disabledCategories.length === 1 ? 'workspace.categories.enableCategory' : 'workspace.categories.enableCategories'),
                     value: CONST.POLICY.BULK_ACTION_TYPES.ENABLE,
                     onSelected: () => {
@@ -609,7 +607,7 @@ function WorkspaceCategoriesPage({route}: WorkspaceCategoriesPageProps) {
                         success
                         onPress={navigateToCreateCategoryPage}
                         sentryLabel={CONST.SENTRY_LABEL.WORKSPACE.CATEGORIES.ADD_BUTTON}
-                        icon={Expensicons.Plus}
+                        icon={icons.Plus}
                         text={translate('workspace.categories.addCategory')}
                         style={[shouldUseNarrowLayout && styles.flex1]}
                     />
@@ -692,6 +690,7 @@ function WorkspaceCategoriesPage({route}: WorkspaceCategoriesPageProps) {
                     title={selectionModeHeader ? translate('common.selectMultiple') : translate('workspace.common.categories')}
                     icon={!selectionModeHeader ? illustrations.FolderOpen : undefined}
                     shouldUseHeadlineHeader={!selectionModeHeader}
+                    shouldDisplayHelpButton
                     onBackButtonPress={() => {
                         if (isMobileSelectionModeEnabled) {
                             setSelectedCategories([]);
@@ -764,7 +763,7 @@ function WorkspaceCategoriesPage({route}: WorkspaceCategoriesPageProps) {
                                 !policyHasAccountingConnections
                                     ? [
                                           {
-                                              icon: Expensicons.Plus,
+                                              icon: icons.Plus,
                                               buttonText: translate('workspace.categories.addCategory'),
                                               buttonAction: navigateToCreateCategoryPage,
                                               success: true,

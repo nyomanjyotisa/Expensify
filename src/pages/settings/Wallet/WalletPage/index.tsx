@@ -11,7 +11,7 @@ import Icon from '@components/Icon';
 import KYCWall from '@components/KYCWall';
 import {KYCWallContext} from '@components/KYCWall/KYCWallContext';
 import type {PaymentMethodType, Source} from '@components/KYCWall/types';
-import {LockedAccountContext} from '@components/LockedAccountModalProvider';
+import {useLockedAccountActions, useLockedAccountState} from '@components/LockedAccountModalProvider';
 import MenuItem from '@components/MenuItem';
 import MenuItemWithTopDescription from '@components/MenuItemWithTopDescription';
 import {ModalActions} from '@components/Modal/Global/ModalContext';
@@ -66,6 +66,7 @@ function WalletPage() {
     const [allPolicies] = useOnyx(ONYXKEYS.COLLECTION.POLICY);
     const [allTransactions] = useOnyx(ONYXKEYS.COLLECTION.TRANSACTION);
     const [allReports] = useOnyx(ONYXKEYS.COLLECTION.REPORT);
+    const [savedColumnLayouts] = useOnyx(ONYXKEYS.NVP_SAVED_CSV_COLUMN_LAYOUT_LIST);
     const currentUserPersonalDetails = useCurrentUserPersonalDetails();
     const [isLoadingPaymentMethods = true] = useOnyx(ONYXKEYS.IS_LOADING_PAYMENT_METHODS);
     const [userWallet] = useOnyx(ONYXKEYS.USER_WALLET);
@@ -75,7 +76,8 @@ function WalletPage() {
     const [lastUsedPaymentMethods] = useOnyx(ONYXKEYS.NVP_LAST_PAYMENT_METHOD);
     const [personalPolicyID] = useOnyx(ONYXKEYS.PERSONAL_POLICY_ID);
     const isUserValidated = userAccount?.validated ?? false;
-    const {isAccountLocked, showLockedAccountModal} = useContext(LockedAccountContext);
+    const {isAccountLocked} = useLockedAccountState();
+    const {showLockedAccountModal} = useLockedAccountActions();
     const {login: currentUserLogin} = useCurrentUserPersonalDetails();
 
     const icons = useMemoizedLazyExpensifyIcons(['MoneySearch', 'Wallet', 'Transfer', 'Hourglass', 'Exclamation', 'Star', 'Trashcan', 'Globe', 'UserPlus', 'UserMinus', 'Table']);
@@ -275,10 +277,11 @@ function WalletPage() {
         });
 
         if (result.action === ModalActions.CONFIRM) {
-            deletePersonalCard({cardID: selectedCard.cardID, card: selectedCard, allTransactions, allReports});
+            const savedColumnLayout = savedColumnLayouts?.[selectedCard.cardID];
+            deletePersonalCard({cardID: selectedCard.cardID, card: selectedCard, allTransactions, allReports, savedColumnLayout});
         }
         setSelectedCard(undefined);
-    }, [selectedCard, showConfirmModal, translate, allTransactions, allReports]);
+    }, [selectedCard, showConfirmModal, translate, allTransactions, allReports, savedColumnLayouts]);
 
     useEffect(() => {
         // If the user was previously offline, skip debouncing showing the loader
@@ -333,6 +336,7 @@ function WalletPage() {
             shouldUseHeadlineHeader
             shouldShowBackButton={shouldUseNarrowLayout}
             shouldDisplaySearchRouter
+            shouldDisplayHelpButton
         />
     );
 
