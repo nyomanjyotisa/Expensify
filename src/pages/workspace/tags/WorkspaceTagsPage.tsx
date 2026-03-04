@@ -1,6 +1,7 @@
 import React, {useCallback, useEffect, useMemo, useState} from 'react';
 import {InteractionManager, View} from 'react-native';
 import ActivityIndicator from '@components/ActivityIndicator';
+import Avatar from '@components/Avatar';
 import Button from '@components/Button';
 import ButtonWithDropdownMenu from '@components/ButtonWithDropdownMenu';
 import type {DropdownOption} from '@components/ButtonWithDropdownMenu/types';
@@ -52,10 +53,13 @@ import Navigation from '@libs/Navigation/Navigation';
 import type {PlatformStackScreenProps} from '@libs/Navigation/PlatformStackNavigation/types';
 import type {WorkspaceSplitNavigatorParamList} from '@libs/Navigation/types';
 import {isDisablingOrDeletingLastEnabledTag, isMakingLastRequiredTagListOptional} from '@libs/OptionsListUtils';
+import {formatPhoneNumber} from '@libs/LocalePhoneNumber';
+import {getDisplayNameOrDefault, getPersonalDetailByEmail} from '@libs/PersonalDetailsUtils';
 import {
     getCleanedTagName,
     getConnectedIntegration,
     getCurrentConnectionName,
+    getTagApproverRule,
     getTagLists,
     hasAccountingConnections as hasAccountingConnectionsPolicyUtils,
     hasDependentTags as hasDependentTagsPolicyUtils,
@@ -112,6 +116,7 @@ function WorkspaceTagsPage({route}: WorkspaceTagsPageProps) {
 
     const canSelectMultiple = !hasDependentTags && (shouldUseNarrowLayout ? isMobileSelectionModeEnabled : true);
     const isControlPolicyWithWideLayout = !shouldUseNarrowLayout && isControlPolicy(policy);
+    const shouldShowApproverColumn = isControlPolicyWithWideLayout && !isMultiLevelTags && !!policy?.areRulesEnabled;
     const fetchTags = useCallback(() => {
         openPolicyTagsPage(policyID);
     }, [policyID]);
@@ -265,56 +270,84 @@ function WorkspaceTagsPage({route}: WorkspaceTagsPageProps) {
             });
         }
 
-        return Object.values(policyTagLists?.at(0)?.tags ?? {}).map((tag) => ({
-            value: tag.name,
-            text: getCleanedTagName(tag.name),
-            keyForList: tag.name,
-            pendingAction: tag.pendingAction,
-            errors: tag.errors ?? undefined,
-            enabled: tag.enabled,
-            isDisabled: tag.pendingAction === CONST.RED_BRICK_ROAD_PENDING_ACTION.DELETE,
-            rightElement: isControlPolicyWithWideLayout ? (
-                <>
-                    <View style={glCodeContainerStyle}>
-                        <Text
-                            numberOfLines={1}
-                            style={glCodeTextStyle}
-                        >
-                            {tag['GL Code']}
-                        </Text>
-                    </View>
-                    <View style={switchContainerStyle}>
-                        <Switch
-                            isOn={tag.enabled}
-                            disabled={tag.pendingAction === CONST.RED_BRICK_ROAD_PENDING_ACTION.DELETE}
-                            accessibilityLabel={translate('workspace.tags.enableTag')}
-                            onToggle={(newValue: boolean) => {
-                                if (isDisablingOrDeletingLastEnabledTag(policyTagLists.at(0), [tag])) {
-                                    setIsCannotDeleteOrDisableLastTagModalVisible(true);
-                                    return;
-                                }
-                                updateWorkspaceTagEnabled(newValue, tag.name);
-                            }}
-                            showLockIcon={isDisablingOrDeletingLastEnabledTag(policyTagLists.at(0), [tag])}
-                        />
-                    </View>
-                </>
-            ) : (
-                <Switch
-                    isOn={tag.enabled}
-                    disabled={tag.pendingAction === CONST.RED_BRICK_ROAD_PENDING_ACTION.DELETE}
-                    accessibilityLabel={translate('workspace.tags.enableTag')}
-                    onToggle={(newValue: boolean) => {
-                        if (isDisablingOrDeletingLastEnabledTag(policyTagLists.at(0), [tag])) {
-                            setIsCannotDeleteOrDisableLastTagModalVisible(true);
-                            return;
-                        }
-                        updateWorkspaceTagEnabled(newValue, tag.name);
-                    }}
-                    showLockIcon={isDisablingOrDeletingLastEnabledTag(policyTagLists.at(0), [tag])}
-                />
-            ),
-        }));
+        return Object.values(policyTagLists?.at(0)?.tags ?? {}).map((tag) => {
+            const approverEmail = shouldShowApproverColumn ? (getTagApproverRule(policy, tag.name)?.approver ?? '') : '';
+            const approverPersonalDetail = getPersonalDetailByEmail(approverEmail);
+            const approverDisplayName = approverPersonalDetail ? formatPhoneNumber(getDisplayNameOrDefault(approverPersonalDetail, approverEmail)) : '';
+
+            return {
+                value: tag.name,
+                text: getCleanedTagName(tag.name),
+                keyForList: tag.name,
+                pendingAction: tag.pendingAction,
+                errors: tag.errors ?? undefined,
+                enabled: tag.enabled,
+                isDisabled: tag.pendingAction === CONST.RED_BRICK_ROAD_PENDING_ACTION.DELETE,
+                rightElement: isControlPolicyWithWideLayout ? (
+                    <>
+                        <View style={glCodeContainerStyle}>
+                            <Text
+                                numberOfLines={1}
+                                style={glCodeTextStyle}
+                            >
+                                {tag['GL Code']}
+                            </Text>
+                        </View>
+                        {shouldShowApproverColumn && (
+                            <View style={[glCodeContainerStyle, styles.flexRow, styles.alignItemsCenter]}>
+                                {approverPersonalDetail ? (
+                                    <>
+                                        <Avatar
+                                            source={approverPersonalDetail.avatar}
+                                            name={approverDisplayName}
+                                            avatarID={approverPersonalDetail.accountID}
+                                            type={CONST.ICON_TYPE_AVATAR}
+                                            size={CONST.AVATAR_SIZE.SUBSCRIPT}
+                                            containerStyles={[styles.mr3]}
+                                        />
+                                        <Text
+                                            numberOfLines={1}
+                                            style={glCodeTextStyle}
+                                        >
+                                            {approverDisplayName}
+                                        </Text>
+                                    </>
+                                ) : null}
+                            </View>
+                        )}
+                        <View style={switchContainerStyle}>
+                            <Switch
+                                isOn={tag.enabled}
+                                disabled={tag.pendingAction === CONST.RED_BRICK_ROAD_PENDING_ACTION.DELETE}
+                                accessibilityLabel={translate('workspace.tags.enableTag')}
+                                onToggle={(newValue: boolean) => {
+                                    if (isDisablingOrDeletingLastEnabledTag(policyTagLists.at(0), [tag])) {
+                                        setIsCannotDeleteOrDisableLastTagModalVisible(true);
+                                        return;
+                                    }
+                                    updateWorkspaceTagEnabled(newValue, tag.name);
+                                }}
+                                showLockIcon={isDisablingOrDeletingLastEnabledTag(policyTagLists.at(0), [tag])}
+                            />
+                        </View>
+                    </>
+                ) : (
+                    <Switch
+                        isOn={tag.enabled}
+                        disabled={tag.pendingAction === CONST.RED_BRICK_ROAD_PENDING_ACTION.DELETE}
+                        accessibilityLabel={translate('workspace.tags.enableTag')}
+                        onToggle={(newValue: boolean) => {
+                            if (isDisablingOrDeletingLastEnabledTag(policyTagLists.at(0), [tag])) {
+                                setIsCannotDeleteOrDisableLastTagModalVisible(true);
+                                return;
+                            }
+                            updateWorkspaceTagEnabled(newValue, tag.name);
+                        }}
+                        showLockIcon={isDisablingOrDeletingLastEnabledTag(policyTagLists.at(0), [tag])}
+                    />
+                ),
+            };
+        });
     }, [
         isMultiLevelTags,
         policyTagLists,
@@ -325,6 +358,7 @@ function WorkspaceTagsPage({route}: WorkspaceTagsPageProps) {
         updateWorkspaceRequiresTag,
         updateWorkspaceTagEnabled,
         isControlPolicyWithWideLayout,
+        shouldShowApproverColumn,
         glCodeContainerStyle,
         glCodeTextStyle,
         switchContainerStyle,
@@ -382,7 +416,7 @@ function WorkspaceTagsPage({route}: WorkspaceTagsPageProps) {
             );
         }
 
-        // Show GL Code column only on wide screens for control policies
+        // Show GL Code and Approver columns only on wide screens for control policies when rules are enabled
         if (isControlPolicyWithWideLayout && !isMultiLevelTags) {
             return (
                 <View style={[styles.flex1, styles.flexRow, styles.justifyContentBetween, styles.pl3]}>
@@ -392,6 +426,11 @@ function WorkspaceTagsPage({route}: WorkspaceTagsPageProps) {
                     <View style={[styles.flex1, styles.pr16]}>
                         <Text style={[styles.textMicroSupporting, styles.alignSelfStart]}>{translate('workspace.tags.glCode')}</Text>
                     </View>
+                    {shouldShowApproverColumn && (
+                        <View style={[styles.flex1, styles.pr16]}>
+                            <Text style={[styles.textMicroSupporting, styles.alignSelfStart]}>{translate('common.approver')}</Text>
+                        </View>
+                    )}
                     <View style={[StyleUtils.getMinimumWidth(variables.w72), styles.mr5]}>
                         <Text style={[styles.textMicroSupporting, styles.alignSelfStart]}>{translate('common.enabled')}</Text>
                     </View>
