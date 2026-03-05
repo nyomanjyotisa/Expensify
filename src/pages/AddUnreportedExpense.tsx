@@ -1,12 +1,18 @@
 import React, {useCallback, useEffect, useMemo, useRef, useState} from 'react';
+import {View} from 'react-native';
 import type {OnyxCollection} from 'react-native-onyx';
 import AddUnreportedExpenseFooter from '@components/AddUnreportedExpenseFooter';
 import EmptyStateComponent from '@components/EmptyStateComponent';
 import HeaderWithBackButton from '@components/HeaderWithBackButton';
+import {PressableWithFeedback} from '@components/Pressable';
 import ScreenWrapper from '@components/ScreenWrapper';
+import DropdownButton from '@components/Search/FilterDropdowns/DropdownButton';
+import type {MultiSelectItem} from '@components/Search/FilterDropdowns/MultiSelectPopup';
+import MultiSelectPopup from '@components/Search/FilterDropdowns/MultiSelectPopup';
 import SelectionList from '@components/SelectionList';
 import type {ListItem, SelectionListHandle} from '@components/SelectionList/types';
 import UnreportedExpensesSkeleton from '@components/Skeletons/UnreportedExpensesSkeleton';
+import Text from '@components/Text';
 import useCurrentUserPersonalDetails from '@hooks/useCurrentUserPersonalDetails';
 import useDebouncedState from '@hooks/useDebouncedState';
 import {useMemoizedLazyIllustrations} from '@hooks/useLazyAsset';
@@ -21,7 +27,7 @@ import getNonEmptyStringOnyxID from '@libs/getNonEmptyStringOnyxID';
 import interceptAnonymousUser from '@libs/interceptAnonymousUser';
 import type {AddUnreportedExpensesParamList} from '@libs/Navigation/types';
 import {canSubmitPerDiemExpenseFromWorkspace, getPerDiemCustomUnit} from '@libs/PolicyUtils';
-import {getTransactionDetails, isIOUReport} from '@libs/ReportUtils';
+import {getReportOrDraftReport, getTransactionDetails, isIOUReport, isOpenExpenseReport} from '@libs/ReportUtils';
 import {shouldRestrictUserBillableActions} from '@libs/SubscriptionUtils';
 import tokenizedSearch from '@libs/tokenizedSearch';
 import {createUnreportedExpenses, getAmount, getCurrency, getDescription, getMerchant, isPerDiemRequest} from '@libs/TransactionUtils';
@@ -38,6 +44,8 @@ import UnreportedExpenseListItem from './UnreportedExpenseListItem';
 
 type AddUnreportedExpensePageType = PlatformStackScreenProps<AddUnreportedExpensesParamList, typeof SCREENS.ADD_UNREPORTED_EXPENSES_ROOT>;
 
+type ExpenseStatus = 'unreported' | 'draft';
+
 function AddUnreportedExpense({route}: AddUnreportedExpensePageType) {
     const {translate} = useLocalize();
     const illustrations = useMemoizedLazyIllustrations(['FolderWithPapersAndWatch'] as const);
@@ -45,6 +53,7 @@ function AddUnreportedExpense({route}: AddUnreportedExpensePageType) {
     const [offset, setOffset] = useState(0);
     const {isOffline} = useNetwork();
     const [selectedIds, setSelectedIds] = useState(new Set<string>());
+    const [selectedStatuses, setSelectedStatuses] = useState<Array<MultiSelectItem<ExpenseStatus>>>([]);
     const [searchValue, debouncedSearchValue, setSearchValue] = useDebouncedState('');
     const {reportID, backToReport} = route.params;
     const [report] = useOnyx(`${ONYXKEYS.COLLECTION.REPORT}${reportID}`);
@@ -65,7 +74,13 @@ function AddUnreportedExpense({route}: AddUnreportedExpensePageType) {
             }
             return Object.values(transactions || {}).filter((item) => {
                 const isUnreported = item?.reportID === CONST.REPORT.UNREPORTED_REPORT_ID || item?.reportID === '';
-                if (!isUnreported) {
+                const isOnOpenExpenseReport = isOpenExpenseReport(getReportOrDraftReport(item?.reportID));
+                if (!isUnreported && !isOnOpenExpenseReport) {
+                    return false;
+                }
+
+                // Don't show expenses that are already on the current report
+                if (item?.reportID === reportID) {
                     return false;
                 }
 
@@ -100,7 +115,7 @@ function AddUnreportedExpense({route}: AddUnreportedExpensePageType) {
                 return true;
             });
         },
-        [policy, report, cardList, currentUserAccountID],
+        [policy, report, cardList, currentUserAccountID, reportID],
     );
 
     const [transactions = getEmptyArray<Transaction>()] = useOnyx(
@@ -161,12 +176,31 @@ function AddUnreportedExpense({route}: AddUnreportedExpensePageType) {
         });
     }, [debouncedSearchValue, shouldShowTextInput, transactions]);
 
+    const selectedStatusValues = useMemo(() => selectedStatuses.map((s) => s.value), [selectedStatuses]);
+
+    const statusFilteredTransactions = useMemo(() => {
+        if (selectedStatusValues.length === 0) {
+            return filteredTransactions;
+        }
+
+        return filteredTransactions.filter((item) => {
+            const isUnreported = item?.reportID === CONST.REPORT.UNREPORTED_REPORT_ID || item?.reportID === '';
+            if (selectedStatusValues.includes('unreported') && isUnreported) {
+                return true;
+            }
+            if (selectedStatusValues.includes('draft') && !isUnreported) {
+                return true;
+            }
+            return false;
+        });
+    }, [filteredTransactions, selectedStatusValues]);
+
     const unreportedExpenses = useMemo(() => {
-        return createUnreportedExpenses(filteredTransactions).map((item) => ({
+        return createUnreportedExpenses(statusFilteredTransactions).map((item) => ({
             ...item,
             isSelected: selectedIds.has(item.transactionID),
         }));
-    }, [filteredTransactions, selectedIds]);
+    }, [statusFilteredTransactions, selectedIds]);
 
     const footerContent = useMemo(
         () => (
@@ -231,6 +265,50 @@ function AddUnreportedExpense({route}: AddUnreportedExpensePageType) {
             return new Set(availableUnreportedExpenses.map(({transactionID}) => transactionID));
         });
     };
+
+    const statusItems: Array<MultiSelectItem<ExpenseStatus>> = useMemo(
+        () => [
+            {text: translate('common.unreported'), value: 'unreported'},
+            {text: translate('common.draft'), value: 'draft'},
+        ],
+        [translate],
+    );
+
+    const statusPopoverComponent = useCallback(
+        ({closeOverlay}: {closeOverlay: () => void}) => (
+            <MultiSelectPopup
+                label={translate('common.status')}
+                items={statusItems}
+                value={selectedStatuses}
+                closeOverlay={closeOverlay}
+                onChange={setSelectedStatuses}
+            />
+        ),
+        [translate, statusItems, selectedStatuses],
+    );
+
+    const customListHeader = useMemo(
+        () => (
+            <View style={[styles.flex1, styles.flexRow, styles.alignItemsCenter, styles.justifyContentBetween]}>
+                <PressableWithFeedback
+                    style={[styles.userSelectNone, styles.flexRow, styles.alignItemsCenter]}
+                    onPress={onSelectAll}
+                    accessibilityLabel={translate('accessibilityHints.selectAllItems')}
+                    accessibilityRole="button"
+                    dataSet={{[CONST.SELECTION_SCRAPER_HIDDEN_ELEMENT]: true}}
+                >
+                    <Text style={[styles.textStrong, styles.ph3]}>{translate('workspace.people.selectAll')}</Text>
+                </PressableWithFeedback>
+                <DropdownButton
+                    label={translate('common.status')}
+                    value={selectedStatuses.map((s) => s.text)}
+                    PopoverComponent={statusPopoverComponent}
+                />
+            </View>
+        ),
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+        [styles, onSelectAll, translate, selectedStatuses, statusPopoverComponent],
+    );
 
     const hasSearchTerm = debouncedSearchValue.trim().length > 0;
     const isShowingEmptyState = !hasSearchTerm && transactions.length === 0;
@@ -314,6 +392,7 @@ function AddUnreportedExpense({route}: AddUnreportedExpensePageType) {
                 ref={selectionListRef}
                 onSelectRow={onSelectRow}
                 onSelectAll={onSelectAll}
+                customListHeader={customListHeader}
                 style={{listHeaderWrapperStyle: styles.ph8}}
                 textInputOptions={textInputOptions}
                 shouldShowTextInput={shouldShowTextInput}
