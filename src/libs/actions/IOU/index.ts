@@ -211,6 +211,7 @@ import {
     getWaypoints,
     hasAnyTransactionWithoutRTERViolation,
     hasDuplicateTransactions,
+    hasMissingSmartscanFields,
     hasSubmissionBlockingViolations,
     isCustomUnitRateIDForP2P,
     isDistanceRequest as isDistanceRequestTransactionUtils,
@@ -10505,6 +10506,12 @@ function canSubmitReport(
     const hasAllPendingRTERViolations = allHavePendingRTERViolation(transactions, allViolations, currentUserEmailParam, currentUserAccountID, report, policy);
     const hasTransactionWithoutRTERViolation = hasAnyTransactionWithoutRTERViolation(transactions, allViolations, currentUserEmailParam, currentUserAccountID, report, policy);
     const hasOnlyPendingCardOrScanFailTransactions = transactions.length > 0 && transactions.every((t) => isPendingCardOrScanningTransaction(t));
+    const hasSmartScanFailedWithMissingFields = transactions.some(
+        (transaction) =>
+            isScanRequestTransactionUtils(transaction) &&
+            transaction?.receipt?.state === CONST.IOU.RECEIPT_STATE.SCAN_FAILED &&
+            hasMissingSmartscanFields(transaction, report),
+    );
     const hasAnySubmissionBlockingViolations = transactions.some((transaction) =>
         hasSubmissionBlockingViolations(transaction, allViolations, currentUserEmailParam, currentUserAccountID, report, policy),
     );
@@ -10516,6 +10523,7 @@ function canSubmitReport(
         !hasAllPendingRTERViolations &&
         hasTransactionWithoutRTERViolation &&
         !isReportArchived &&
+        !hasSmartScanFailedWithMissingFields &&
         !hasAnySubmissionBlockingViolations &&
         transactions.length > 0
     );
