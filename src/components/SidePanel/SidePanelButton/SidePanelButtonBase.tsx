@@ -2,6 +2,7 @@ import React from 'react';
 import Icon from '@components/Icon';
 import {PressableWithoutFeedback} from '@components/Pressable';
 import Tooltip from '@components/Tooltip';
+import useIsViewingSidePanelTargetReport from '@hooks/useIsViewingSidePanelTargetReport';
 import {useMemoizedLazyExpensifyIcons} from '@hooks/useLazyAsset';
 import useLocalize from '@hooks/useLocalize';
 import useSidePanelActions from '@hooks/useSidePanelActions';
@@ -16,10 +17,11 @@ function SidePanelButtonBase({style}: SidePanelButtonProps) {
     const theme = useTheme();
     const {translate} = useLocalize();
     const {shouldHideHelpButton} = useSidePanelState();
+    const isViewingSidePanelTargetReport = useIsViewingSidePanelTargetReport();
     const {openSidePanel} = useSidePanelActions();
     const {ConciergeAvatar} = useMemoizedLazyExpensifyIcons(['ConciergeAvatar']);
 
-    if (shouldHideHelpButton) {
+    if (shouldHideHelpButton || isViewingSidePanelTargetReport) {
         return null;
     }
 
