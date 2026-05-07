@@ -2776,6 +2776,7 @@ ${amount}，商户：${merchant} - 日期：${date}`,
     },
     validateCodeForm: {
         magicCodeNotReceived: '没有收到验证码？',
+        avoidScamsMessage: '<strong>谨防诈骗。请勿将您的验证码分享给任何人。</strong>我们的团队绝不会通过电话、短信或电子邮件向您索要此验证码。',
         enterAuthenticatorCode: '请输入您的认证器验证码',
         enterRecoveryCode: '请输入您的恢复代码',
         requiredWhen2FAEnabled: '启用双重验证时必填',

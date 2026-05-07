@@ -2857,6 +2857,8 @@ ${amount} für ${merchant} – ${date}`,
     },
     validateCodeForm: {
         magicCodeNotReceived: 'Keinen magischen Code erhalten?',
+        avoidScamsMessage:
+            '<strong>Schütze dich vor Betrug. Teile deinen Code mit niemandem.</strong> Unser Team wird dich niemals anrufen, dir eine SMS senden oder dir eine E-Mail schreiben, um nach diesem Code zu fragen.',
         enterAuthenticatorCode: 'Bitte gib deinen Authentifizierungscode ein',
         enterRecoveryCode: 'Bitte gib deinen Wiederherstellungscode ein',
         requiredWhen2FAEnabled: 'Erforderlich, wenn 2FA aktiviert ist',
