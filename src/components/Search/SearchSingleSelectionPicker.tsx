@@ -69,7 +69,7 @@ function SearchSingleSelectionPicker({
 
     const noResultsFound = !initiallySelectedItemSection.length && !remainingItemsSection.length;
 
-    const noneOptionSection = shouldShowNoneOption && !noResultsFound
+    const noneOptionSection = shouldShowNoneOption && !debouncedSearchTerm.trim()
         ? [
               {
                   text: translate('common.none'),
