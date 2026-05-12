@@ -73,9 +73,9 @@ function SearchSingleSelectionPicker({
         ? [
               {
                   text: translate('common.none'),
-                      keyForList: CONST.SEARCH.NONE_OPTION_ITEM_VALUE,
+                  keyForList: CONST.SEARCH.NONE_OPTION_ITEM_VALUE,
                   isSelected: !selectedItem?.value,
-                      value: CONST.SEARCH.NONE_OPTION_ITEM_VALUE,
+                  value: '',
               },
           ]
         : [];
@@ -101,25 +101,20 @@ function SearchSingleSelectionPicker({
           ];
 
     const onSelectItem = (item: Partial<OptionData & SearchSingleSelectionPickerItem>) => {
-        if (!item.text || !item.keyForList || !item.value) {
+        if (!item.text || !item.keyForList || item.value === undefined) {
             return;
         }
-
-        const isNoneOption = item.value === CONST.SEARCH.NONE_OPTION_ITEM_VALUE;
-        const valueToSave = isNoneOption || item.isSelected ? undefined : item.value;
-
         if (shouldAutoSave) {
-            onSaveSelection(valueToSave);
+            if (item.isSelected) {
+                return;
+            }
+            onSaveSelection(item.value);
             Navigation.goBack(backToRoute ?? ROUTES.SEARCH_ADVANCED_FILTERS.getRoute());
             return;
         }
-
-        if (valueToSave === undefined) {
-            setSelectedItem(undefined);
-            return;
+        if (!item.isSelected) {
+            setSelectedItem({name: item.text, value: item.value});
         }
-
-        setSelectedItem({name: item.text, value: item.value});
     };
 
     const resetChanges = () => {
