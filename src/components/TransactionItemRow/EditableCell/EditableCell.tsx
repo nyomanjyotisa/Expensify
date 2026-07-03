@@ -57,7 +57,7 @@ function EditableCell({children, editContent, popoverContent, isEditing, canEdit
     const cellId = useId();
     const {setIsEditingCell, setFocusedCellId} = useEditingCellActions();
     const isInteractive = useDeferredValue(true, false);
-
+    console.log('test');
     useEffect(() => {
         if (!isEditable || !isEditing) {
             return;
